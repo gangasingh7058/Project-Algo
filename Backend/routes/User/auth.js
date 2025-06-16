@@ -3,11 +3,10 @@ import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
 
-dotenv.config(); 
-
+dotenv.config();
 
 const route = Router();
-const jwtpasskey = process.env.JWT_PASSKEY
+const jwtpasskey = process.env.JWT_PASSKEY;
 const prisma = new PrismaClient();
 
 // Login route
@@ -63,12 +62,25 @@ route.post('/register', async (req, res) => {
   }
 
   try {
+    const existinguser = await prisma.user.findUnique({
+      where: {
+        username: username,
+      },
+    });
+
+    if (existinguser) {
+      return res.json({
+        success: false,
+        msg: "User With Same Username Already Exists",
+      });
+    }
+
     const user = await prisma.user.create({
       data: {
         username,
         password,
         firstname,
-        lastname: lastname || null,  // optional field
+        lastname: lastname || null,
         DOB: new Date(dob),
       },
     });
@@ -80,6 +92,7 @@ route.post('/register', async (req, res) => {
       msg: "User created successfully",
       jwt_token: token,
     });
+
   } catch (error) {
     res.status(500).json({
       success: false,
