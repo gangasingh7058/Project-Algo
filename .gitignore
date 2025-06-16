@@ -1,0 +1,13 @@
+# Ignore environment files
+Backend/.env
+
+# Ignore node_modules folders in both Backend and Frontend
+Backend/node_modules/
+Frontend/node_modules/
+
+# Ignore system/IDE files
+.DS_Store
+*.log
+*.env.local
+*.env.*.local
+
