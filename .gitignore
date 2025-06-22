@@ -1,13 +1,18 @@
 # Ignore environment files
 Backend/.env
+Compiler/.env
 
-# Ignore node_modules folders in both Backend and Frontend
+# Ignore node_modules folders
 Backend/node_modules/
 Frontend/node_modules/
+Compiler/node_modules/
+
+# Ignore generated code and executables from Compiler
+Compiler/Help_Functions/Codes/
+Compiler/Help_Functions/executable/
 
 # Ignore system/IDE files
 .DS_Store
 *.log
 *.env.local
 *.env.*.local
-
