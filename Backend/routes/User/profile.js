@@ -1,0 +1,66 @@
+import express, { Router } from 'express';
+import jwt from 'jsonwebtoken';
+import { PrismaClient } from '@prisma/client';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const route = Router();
+const jwtpasskey = process.env.JWT_PASSKEY;
+const prisma = new PrismaClient();
+
+route.get('/profile', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        success: false,
+        message: "Authorization token missing or invalid"
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    // Verify token
+    const decoded = jwt.verify(token, jwtpasskey);
+    const userId = decoded.id;
+
+    // Fetch user
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        firstname: true,
+        lastname: true,
+        DOB: true,
+        comments: true,
+        solved: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      user
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch profile",
+      error: error.message
+    });
+  }
+});
+
+
+
+export default route

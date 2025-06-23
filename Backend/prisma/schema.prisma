@@ -1,12 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  
 }
 
 datasource db {
@@ -14,12 +7,59 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
-  id        String   @id @default(uuid())   // Primary key with UUID
-  username  String   @unique                // Must be unique
-  password  String                          // Required
-  firstname String                          // Required
-  lastname  String?                         // Optional
-  DOB       DateTime                        // Required
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  firstname String
+  lastname  String?
+  DOB       DateTime
+
+  comments  Comment[]
+  solved    Solve[]
+}
+
+model Solve {
+  id        String  @id @default(uuid())
+  success   Boolean
+  error     String?
+
+  // Foreign keys
+  problemId String
+  userId    String
+
+  // Relations
+  problem   Problem @relation(fields: [problemId], references: [id])
+  user      User    @relation(fields: [userId], references: [id])
+}
+
+model Problem {
+  id          String     @id @default(uuid())
+  title       String
+  description String
+
+  testCases   TestCase[]
+  comments    Comment[]
+  solves      Solve[] // ✅ Reverse relation from Problem to Solve
+}
+
+model TestCase {
+  id        String   @id @default(uuid())
+  input     String
+  output    String
+
+  problemId String
+  problem   Problem  @relation(fields: [problemId], references: [id])
+}
+
+model Comment {
+  id        String  @id @default(uuid())
+  title     String
+  body      String
+
+  problemId String
+  userId    String
+
+  problem   Problem @relation(fields: [problemId], references: [id])
+  user      User    @relation(fields: [userId], references: [id])
 }

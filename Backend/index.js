@@ -1,7 +1,8 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import userauthroute from './routes/User/auth.js';
-
+import problemsroute from './routes/Problems/problem.js';
+import userProfileroute from './routes/User/profile.js'
 
 dotenv.config();
 
@@ -11,8 +12,9 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json()); // parse incoming JSON requests
 
 
-app.use('/user', userauthroute);
-
+app.use('/new/user', userauthroute);
+app.use('/user',userProfileroute)
+app.use('/api',problemsroute)
 
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);
