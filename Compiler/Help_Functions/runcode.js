@@ -14,7 +14,7 @@ if (!fs.existsSync(out_path)) {
 }
 
 const runcode = (filepath) => {
-    const output_name = path.parse(filepath).name;
+    const output_name = path.basename(filepath).split('.')[0];
     const out_file_path = path.join(out_path, `${output_name}.exe`);
 
     return new Promise((resolve, reject) => {
