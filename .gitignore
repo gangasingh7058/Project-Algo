@@ -10,6 +10,7 @@ Compiler/node_modules/
 # Ignore generated code and executables from Compiler
 Compiler/Help_Functions/Codes/
 Compiler/Help_Functions/executable/
+Compiler/Help_Functions/inputs/
 
 # Ignore system/IDE files
 .DS_Store

@@ -23,7 +23,7 @@ app.get('/',(req,res)=>{
 })
 
 app.post('/run', async (req, res) => {
-    const { language, code ,inputs , mode='OJ' } = req.body;
+    const { language='cpp', code ,inputs , mode='OJ' } = req.body;
 
     if (!language || !code) {
         return res.json({
@@ -45,7 +45,7 @@ app.post('/run', async (req, res) => {
     } catch (err) {
         return res.json({
             success: false,
-            error: err.error || "Unknown error",
+            error: err || "Unknown error",
         });
     }
 });

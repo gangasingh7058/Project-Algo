@@ -1,12 +1,9 @@
-import express, { Router } from 'express';
-import jwt from 'jsonwebtoken';
+import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
-import dotenv from 'dotenv';
+import getTestCases from '../Functions/get_testcases.js';
 
-dotenv.config();
 
 const route = Router();
-const jwtpasskey = process.env.JWT_PASSKEY;
 const prisma = new PrismaClient();
 
 // Get all problems
@@ -158,6 +155,83 @@ route.get('/comments/problem/:problemId', async (req, res) => {
   }
 });
 
+route.post('/testcases/:pid',async (req,res)=>{
+    const { input , output }=req.body;
+    const { pid }=req.params
 
+    if(!input || !output || !pid){
+      return res.json({
+        success:false,
+        msg:"Send All Data"
+      })
+    }
+
+
+    try {
+      
+      // check if pid exists
+      const check_pid= await prisma.problem.findFirst({
+        where:{
+          id:pid
+        }
+      })
+
+      // pid donot exists
+      if(!check_pid){
+        return res.json({
+          success:false,
+          msg:"P_id does not exist or is in-valid"
+        })
+      }
+
+
+      // post testcases
+      const response=await prisma.testCase.create({
+        data:{
+          input,
+          output,
+          problemId:pid
+        }
+      })
+
+      return res.json({
+        success:true,
+        msg:"Test Case Generated Successfully",
+        data:response
+      })
+
+    } catch (error) {
+      return res.json({
+        success:false,
+        msg:"Error Creating Test Cases"
+      })
+    }
+
+
+})
+
+route.get('/testcases/:pid',async (req,res)=>{
+
+  const { pid }=req.params
+
+    if(!pid){
+      return res.json({
+        success:false,
+        msg:"Send Problem Id"
+      })
+    }
+
+    try {
+      const result=await getTestCases(pid);      
+      return res.json(result);
+    } catch (error) {
+      return res.json({
+        success:false,
+        msg:"Error Creating Test Cases"
+      })
+    }
+
+
+})
 
 export default route;
