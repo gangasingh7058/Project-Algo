@@ -10,11 +10,11 @@ const jwtpasskey = process.env.JWT_PASSKEY;
 const prisma = new PrismaClient();
 
 // Login route
-route.post('/login', async (req, res) => {
+route.post('/signin', async (req, res) => {
   const { username, password } = req.body;
 
   if (!(username && password)) {
-    return res.status(400).json({
+    return res.json({
       success: false,
       msg: "Send all user details",
     });
@@ -36,7 +36,7 @@ route.post('/login', async (req, res) => {
         jwt_token: token,
       });
     } else {
-      res.status(401).json({
+      res.json({
         success: false,
         msg: "No user exists",
       });
@@ -52,10 +52,11 @@ route.post('/login', async (req, res) => {
 
 // Register route
 route.post('/register', async (req, res) => {
+  
   const { username, password, firstname, lastname, dob } = req.body;
 
   if (!(username && password && firstname && dob)) {
-    return res.status(400).json({
+    return res.json({
       success: false,
       msg: "Send all required user details",
     });

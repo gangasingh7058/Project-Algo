@@ -1,22 +1,29 @@
 import { useState } from 'react';
-import axios from 'axios';
 import Editor from '@monaco-editor/react';
+import axios from 'axios';
+import RetroNavbar from '../Components/Navbar';
 
 const CompilerPage = () => {
-  const [code, setCode] = useState(`#include <iostream>\nusing namespace std;\n\nint main() {\n    // your code goes here\n    return 0;\n}`);
+  const [code, setCode] = useState(`#include <iostream>\nusing namespace std;\n\nint main() {\n    int a, b;\n    cin >> a >> b;\n    cout << a + b;\n    return 0;\n}`);
+  const [inputs, setInputs] = useState('');
   const [output, setOutput] = useState('');
   const [loading, setLoading] = useState(false);
-
-  // NEW: font size and theme state
-  const [fontSize, setFontSize] = useState(14);
+  const [fontSize, setFontSize] = useState(18);
   const [theme, setTheme] = useState('vs-dark');
 
   const handleRun = async () => {
+    if (code.includes("cin") && inputs.trim() === "") {
+      alert("Inputs Required for Given Code");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await axios.post('http://localhost:3002/run', {
         language: 'cpp',
-        code: code
+        code: code,
+        inputs: inputs,
+        mode: 'compiler',
       });
 
       if (res.data.success) {
@@ -24,7 +31,7 @@ const CompilerPage = () => {
       } else {
         setOutput(res.data.error || "Error");
       }
-    } catch (error) {
+    } catch (err) {
       setOutput("Server error");
     } finally {
       setLoading(false);
@@ -32,68 +39,96 @@ const CompilerPage = () => {
   };
 
   return (
-    <div className="p-4 max-w-5xl mx-auto font-mono">
-      <h1 className="text-3xl font-bold mb-4 text-center">C++ Compiler</h1>
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 px-6 pb-10 font-mono text-white relative overflow-hidden">
+      
+      <RetroNavbar />
 
-      {/* Dropdowns */}
-      <div className="flex flex-wrap gap-4 items-center justify-between mb-4">
-        <div className="flex gap-4">
-          <div>
-            <label className="mr-2 font-semibold">Font Size:</label>
-            <select
-              className="border px-2 py-1 rounded"
-              value={fontSize}
-              onChange={(e) => setFontSize(Number(e.target.value))}
-            >
-              {[12, 14, 16, 18, 20].map((size) => (
-                <option key={size} value={size}>{size}px</option>
-              ))}
-            </select>
-          </div>
+      {/* Main Content */}
+      <div className="relative z-10">
+        
+        {/* Header Controls */}
+        <div className="flex flex-wrap gap-4 items-center justify-between mb-6">
+          <h1 className="text-6xl font-bold text-cyan-400 pl-30 drop-shadow-[0_0_10px_#22d3ee]">
+            C++ Compiler
+          </h1>
 
-          <div>
-            <label className="mr-2 font-semibold">Theme:</label>
-            <select
-              className="border px-2 py-1 rounded"
-              value={theme}
-              onChange={(e) => setTheme(e.target.value)}
-            >
-              <option value="vs-dark">Dark</option>
-              <option value="light">Light</option>
-              <option value="vs">VS</option>
-              <option value="hc-black">High Contrast</option>
-            </select>
+          <div className="flex gap-4">
+            <div>
+              <label className="mr-2 font-semibold text-white">Font Size:</label>
+              <select
+                className="bg-black/50 border border-cyan-400 text-white px-2 py-1 rounded"
+                value={fontSize}
+                onChange={(e) => setFontSize(Number(e.target.value))}
+              >
+                {[12, 14, 16, 18, 20].map(size => (
+                  <option className='bg-black' key={size} value={size}>{size}px</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mr-2 font-semibold text-white">Theme:</label>
+              <select
+                className="bg-black/50 border border-cyan-400 text-white px-2 py-1 rounded"
+                value={theme}
+                onChange={(e) => setTheme(e.target.value)}
+              >
+                <option className='bg-black' value="vs-dark">Dark</option>
+                <option className='bg-black' value="light">Light</option>
+                <option className='bg-black' value="vs">VS</option>
+                <option className='bg-black' value="hc-black">High Contrast</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        <button
-          onClick={handleRun}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          {loading ? 'Running...' : 'Run Code'}
-        </button>
-      </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Editor */}
+          <div className="rounded-xl overflow-hidden shadow-lg border-2 border-cyan-400/30 bg-black/30 backdrop-blur-md">
+            <Editor
+              height="500px"
+              defaultLanguage="cpp"
+              value={code}
+              theme={theme}
+              onChange={(value) => setCode(value || '')}
+              options={{
+                fontSize: fontSize,
+                minimap: { enabled: false },
+                padding: { top: 12 },
+              }}
+            />
+            <div className="p-4 flex justify-end border-t border-cyan-400/20">
+              <button
+                onClick={handleRun}
+                className="bg-cyan-500 hover:bg-cyan-400 text-black px-6 py-2 rounded-lg font-bold uppercase border border-cyan-300 transition"
+              >
+                {loading ? 'Running...' : 'Run Code'}
+              </button>
+            </div>
+          </div>
 
-      {/* Monaco Editor */}
-      <Editor
-        height="300px"
-        defaultLanguage="cpp"
-        value={code}
-        theme={theme}
-        onChange={(value) => setCode(value || '')}
-        options={{
-          fontSize: fontSize,
-          minimap: { enabled: false },
-          suggestOnTriggerCharacters: true,
-          quickSuggestions: true,
-        }}
-      />
-
-      <div className="mt-6">
-        <h2 className="text-xl font-semibold mb-2">Output:</h2>
-        <pre className="bg-gray-100 p-3 rounded border min-h-[100px] whitespace-pre-wrap">
-          {output || 'Output will appear here...'}
-        </pre>
+          {/* I/O */}
+          <div className="flex flex-col gap-6">
+            <div className="bg-black/30 rounded-xl border border-cyan-400/30 p-4">
+              <h2 className="text-xl font-bold pb-2 text-cyan-300">Input</h2>
+              <textarea
+                rows={5}
+                value={inputs}
+                onChange={(e) => setInputs(e.target.value)}
+                placeholder="Enter input for your program"
+                className="w-full rounded-lg p-3 placeholder:text-cyan-400 text-white border border-cyan-400 bg-transparent resize-none focus:outline-none"
+              />
+            </div>
+            <div className="bg-black/30 rounded-xl border border-cyan-400/30 p-4">
+              <h2 className="text-xl font-bold pb-2 text-cyan-300">Output</h2>
+              <textarea
+                readOnly
+                value={output}
+                placeholder="Output will be displayed here..."
+                className="w-full rounded-lg p-3 text-white placeholder:text-cyan-400 border border-cyan-400 bg-transparent min-h-[150px] resize-none focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

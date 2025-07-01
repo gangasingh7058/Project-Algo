@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 
 import getfilepath from './Help_Functions/getfilepath.js'
 import runcode from "./Help_Functions/runcode.js";
+import getinputpath from "./Help_Functions/getinputpath.js";
 
 
 dotenv.config();
@@ -22,7 +23,7 @@ app.get('/',(req,res)=>{
 })
 
 app.post('/run', async (req, res) => {
-    const { language, code } = req.body;
+    const { language, code ,inputs , mode='OJ' } = req.body;
 
     if (!language || !code) {
         return res.json({
@@ -33,7 +34,8 @@ app.post('/run', async (req, res) => {
 
     try {
         const filepath = getfilepath(language, code); // save file get file path
-        const verdict = await runcode(filepath);      // compiles and gives verdict
+        const input_path=getinputpath(inputs);        // save inpus as txt file
+        const verdict = await runcode(filepath,input_path,mode);      // compiles and gives verdict
 
         return res.json({
             success: true,
