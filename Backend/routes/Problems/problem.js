@@ -9,7 +9,16 @@ const prisma = new PrismaClient();
 // Get all problems
 route.get('/problems', async (req, res) => {
     try {
-        const problems = await prisma.problem.findMany();
+        const problems = await prisma.problem.findMany({
+            include: {
+              tags: {
+                include: {
+                  tag: true, // this includes tagName
+                },
+              },
+            },
+          });
+
         res.json({
             success: true,
             problems: problems
@@ -23,15 +32,25 @@ route.get('/problems', async (req, res) => {
 });
 
 // Get a single problem by ID
-route.get('/problems/:id', async (req, res) => {
+route.get('/problem/:id', async (req, res) => {
     const { id } = req.params;
 
     try {
         const problem = await prisma.problem.findUnique({
             where: { id: id },
             include: {
-                testCases: true,
-                comments: true
+                testCases: {
+                  orderBy:{
+                    id:'asc'
+                  },
+                  take:2
+                },
+                comments: true,
+                tags:{
+                  include:{
+                    tag:true
+                  }
+                }
             }
         });
 

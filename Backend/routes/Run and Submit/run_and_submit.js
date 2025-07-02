@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import axios from 'axios';
+import getTestCases from '../Functions/get_testcases.js';
 
 const route = Router();
 const prisma = new PrismaClient();
@@ -18,12 +19,9 @@ route.post('/run/:pid', async (req, res) => {
   }
 
   try {
-    const problem = await prisma.problem.findFirst({
-      where: { id: pid },
-      include: { testCases: true },
-    });
+    const problem = await getTestCases(pid)
 
-    if (!problem) {
+    if (problem.success==false) {
       return res.json({
         success: false,
         msg: "P_id does not exist or is in-valid",

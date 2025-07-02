@@ -7,6 +7,7 @@ import LandingPage from './Pages/LandingPage';
 import HomePage from './Pages/Home';
 import RetroSigninPage from './Pages/RetroSigninPage';
 import RegisterPage from './Pages/RegisterPage';
+import ProblemSolvePage from './Pages/ProblemSolve';
 import './App.css'
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
         <Route path='/home' element={<HomePage />} />
         <Route path='/user/signin' element={<RetroSigninPage />} />
         <Route path='/user/register' element={<RegisterPage />} />
+        <Route path='home/problem/:pid' element={<ProblemSolvePage />} />
       </Routes>
     </Router>
   );
