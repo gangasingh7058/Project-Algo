@@ -29,7 +29,8 @@ const HomePage =() => {
               }
               setuserdetails(response.data);
                                      
-
+              console.log(response.data);
+              
             } catch (error) {
                 console.log(error);
                  
@@ -60,7 +61,7 @@ const HomePage =() => {
 
             {/* Right column - User Stats */}
             <div className="lg:col-span-1">
-              <UserStatsPanel />
+              <UserStatsPanel firstname={(userdetails==null)?null:userdetails.user.firstname} lastname={(userdetails==null)?null:userdetails.user.lastname} solvecount={(userdetails==null)?null:userdetails.user.solved.length} />
             </div>
           </div>
         </div>

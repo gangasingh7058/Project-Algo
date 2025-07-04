@@ -32,7 +32,7 @@ const Problem_Solve_Layout = ({ problemId }) => {
             },
           }
         );
-          console.log(response.data);
+          
         if (response.data.success) {
           setPastSubmissions(response.data.submissions);
         }

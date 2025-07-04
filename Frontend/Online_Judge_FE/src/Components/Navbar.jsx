@@ -20,7 +20,7 @@ const RetroNavbar = () => {
 
 
   return (
-    <nav className="bg-black/30 backdrop-blur-md border-b-2 border-cyan-400/50 shadow-md px-4 py-3">
+    <nav className="bg-black/30 backdrop-blur-md border-b-2 border-cyan-400/50 shadow-md px-2 py-3">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center space-x-2">
@@ -36,7 +36,7 @@ const RetroNavbar = () => {
             <a
               key={idx}
               href={option.route}
-              className="text-cyan-300 hover:text-yellow-400 font-mono uppercase text-sm tracking-wider transition-all duration-200"
+              className="text-cyan-300 hover:text-yellow-400 font-mono uppercase text-lg tracking-wider transition-all duration-200"
             >
               {option.name}
             </a>

@@ -73,6 +73,56 @@ route.get('/profile', async (req, res) => {
   }
 });
 
+route.get('/submission',async (req,res)=>{
+     const { usertoken } = req.headers;
+
+    if (!usertoken || !usertoken.startsWith("bearer ")) {
+      return res.json({
+        success: false,
+        message: "Authorization token missing or invalid"
+      });
+    }
+
+
+    const token = usertoken.split(" ")[1];
+
+    // Verify token
+    const decoded = jwt.verify(token, jwtpasskey);
+    const userId = decoded.id;
+
+    try {
+      
+      const response = await prisma.solve.findMany({
+            where: {
+              userId: userId
+            },
+            orderBy:{
+              date:'desc'
+            },
+            select: {
+              code: true,
+              date: true,
+              problem: {
+                select: {
+                  title: true
+                }
+              }
+            }
+          });
+          
+          return res.json({
+            success:true,
+            solved:response
+          })
+
+    } catch (error) {
+      return res.json({
+        success:false,
+        message:error
+      })
+    }
+
+})
 
 route.get("/submission/:pid",async (req,res)=>{
     const { usertoken } = req.headers;
