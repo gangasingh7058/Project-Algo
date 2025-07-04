@@ -2,8 +2,46 @@ import ProblemsPanel from "../Components/ProblemPanel";
 import UserStatsPanel from "../Components/UserPanel";
 import ContestsPanel from "../Components/ContestPanel";
 import RetroNavbar from "../Components/Navbar";
+import axios from "axios";
+import getusertoken from "../Helping Functions/getusertoken";
+import { useEffect } from "react";
+import { useState } from "react";
 
-const HomePage = () => {
+const HomePage =() => {
+
+    const token=getusertoken();
+
+    const [userdetails,setuserdetails]=useState(null);
+    
+    useEffect(()=>{
+
+      const getuserdetails=async ()=>{
+            
+            try {
+              const response=await axios.get('http://localhost:3001/user/profile',{
+                headers:{
+                  usertoken:token
+                }
+              })
+
+              if(response.data.success==false){
+                throw error(response.data.message)
+              }
+              setuserdetails(response.data);
+                                     
+
+            } catch (error) {
+                console.log(error);
+                 
+            }
+      }
+
+      getuserdetails();
+
+    },[])
+
+
+
   return (
     <div className="min-h-screen bg-[url('/retro-home-bg.jpg')] bg-cover bg-no-repeat bg-center bg-fixed relative overflow-hidden flex flex-col">
       
@@ -17,7 +55,7 @@ const HomePage = () => {
             {/* Left column - Contests and Problems */}
             <div className="lg:col-span-2 space-y-6">
               <ContestsPanel />
-              <ProblemsPanel />
+              <ProblemsPanel problemssolved={ (userdetails==null)?[]:userdetails.user.solved} />
             </div>
 
             {/* Right column - User Stats */}

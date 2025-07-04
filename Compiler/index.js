@@ -39,13 +39,13 @@ app.post('/run', async (req, res) => {
 
         return res.json({
             success: true,
-            verdict: verdict.output.replace(/\r\n/g, ' ') || "No Output",
-            err:verdict.err || "No error" 
+            verdict: verdict.output.replace(/\r\n/g, '\n') || "No Output",
+            err:verdict.error || "No error" 
         });
     } catch (err) {
         return res.json({
             success: false,
-            error: err || "Unknown error",
+            error: err.error || "Unknown error",
         });
     }
 });

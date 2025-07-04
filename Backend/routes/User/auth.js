@@ -12,6 +12,7 @@ const prisma = new PrismaClient();
 // Login route
 route.post('/signin', async (req, res) => {
   const { username, password } = req.body;
+  
 
   if (!(username && password)) {
     return res.json({
@@ -25,11 +26,12 @@ route.post('/signin', async (req, res) => {
       where: {
         username,
         password,
-      },
+      }
     });
 
     if (user) {
-      const token = jwt.sign({ username }, jwtpasskey);
+      const token = jwt.sign({ id:user.id }, jwtpasskey);
+      
       res.status(200).json({
         success: true,
         msg: "User Signin Successful",
@@ -83,10 +85,10 @@ route.post('/register', async (req, res) => {
         firstname,
         lastname: lastname || null,
         DOB: new Date(dob),
-      },
+      }
     });
 
-    const token = jwt.sign({ username }, jwtpasskey);
+    const token = jwt.sign({ id:user.id }, jwtpasskey);
 
     res.status(201).json({
       success: true,

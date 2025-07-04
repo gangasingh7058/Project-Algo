@@ -26,6 +26,9 @@ const CompilerPage = () => {
         mode: 'compiler',
       });
 
+      console.log(res.data);
+      
+
       if (res.data.success) {
         setOutput(res.data.verdict);
       } else {

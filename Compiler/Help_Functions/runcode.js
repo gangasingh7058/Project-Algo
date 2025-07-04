@@ -3,6 +3,7 @@ import path from 'path';
 import { exec as execute } from 'child_process';
 import { fileURLToPath } from 'url';
 import { promisify } from 'util';
+import { error } from 'console';
 
 const exec = promisify(execute);
 
@@ -35,11 +36,16 @@ const runcode = async (filepath, input_path, mode) => {
         }
 
         // Step 3: Run the executable
-        const { stdout } = await exec(runCommand);
+        const { stdout , stderr } = await exec(runCommand);
+        
+        
+        
 
-        return { output: stdout };
+        return { output: stdout ,
+                error: stderr || null
+        };
     } catch (err) {
-        return { error: err.stderr || err.message };
+        return { output: err.stderr || err.message };
     } finally {
         if (mode == 'compiler') {
             try { fs.rmSync(filepath, { force: true }); } catch {}

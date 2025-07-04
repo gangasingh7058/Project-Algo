@@ -1,8 +1,14 @@
 import Editor from '@monaco-editor/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
+import RunTestCasesResultModule from './RunTestCasesresultmodule';
+import getusertoken from '../Helping Functions/getusertoken';
+import {useNavigate} from 'react-router-dom'
 
-const ProblemSolveCodeArea = () => {
+const ProblemSolveCodeArea = ( { problemId } ) => {
+
+    const navigate=useNavigate();
+
   const [code, setcode] = useState(`#include<iostream>\nusing namespace std;\nint main(){\n\n\n return 0;\n}`);
   const [fontsize, setfontsize] = useState(16);
   const [theme, settheme] = useState('vs-dark');
@@ -11,7 +17,11 @@ const ProblemSolveCodeArea = () => {
   const [todisplay, settodisplay] = useState(codeoutput);
   const [active, setactive] = useState('output');
   const [language, setlanguage] = useState('cpp');
-  const [loading, setloading] = useState(false);
+  const [runloading, setrunloading] = useState(false);
+  const [runTestCaseloading,setrunTestcaseloading]=useState(false)
+  const [submitloading,setsubmitloading]=useState(false);
+  const [showresultmodule,setshowresultmodule]=useState(false);
+  const [runteastcaseresponse,setruntestcaseresponse]=useState(null);
 
   const handleOnChange = (e) => {
     if (active == 'output') return;
@@ -25,35 +35,105 @@ const ProblemSolveCodeArea = () => {
       return;
     }
 
-    console.log(codeinput);
-    
-
-    setloading(true);
+    setrunloading(true);
     try {
       const res = await axios.post('http://localhost:3002/run', {
         language: language,
         code: code,
         inputs: codeinput,
-        mode: 'compiler'
+        mode: 'OJ'
       });
 
       if (res.data.success) {
         setcodeoutput(res.data.verdict);
-        settodisplay(res.data.verdict)
+        settodisplay(res.data.verdict);
       } else {
-        console.log(res.data);
-        
-        setcodeoutput('Compilation Error');
-        settodisplay("Compilation Error")
+        console.log(res.data);        
+        setcodeoutput("Compilation Error");
+        settodisplay("Compilation Error");
       }
     } catch (error) {
       setcodeoutput('Server error');
     } finally {
     //   settodisplay(codeoutput);
       setactive('output');
-      setloading(false);
+      setrunloading(false);
     }
   };
+
+  const handleRunTest=async ()=>{
+
+        setrunTestcaseloading(true);
+
+    try {
+        
+        const response=await axios.post(`http://localhost:3001/evaluate/run/${problemId}`,{
+            code: code,
+            language: language
+        })
+
+        setruntestcaseresponse(response.data);
+        console.log(response.data);
+             
+
+    } catch (error) {
+        console.log(error);
+        console.log("Some Error Occured While Running Test Cases");
+               
+    }finally {
+        setrunTestcaseloading(false)
+        setshowresultmodule(true);
+    }
+
+
+  }
+
+
+  const handleSubmit=async ()=>{
+
+    if(runteastcaseresponse==null){
+        alert("Run Test Cases First");
+        return;
+    }
+
+    if(runteastcaseresponse.success==false){
+        alert("All Test Cases not passes");
+        return;
+    }
+
+    let token=getusertoken().split(" ")[1];
+    if(token==null){
+        alert("Unknown User");
+        navigate('/user/signin');
+    }
+
+    setsubmitloading(true);
+
+    try {
+        
+        const response=await axios.post(`http://localhost:3001/evaluate/submit/${problemId}`,{
+            code,
+            language,
+            usertoken:token
+        })
+
+        if(!response){
+            throw error;
+        }
+
+        // OutPut User
+        alert(response.data.msg);
+        
+
+    } catch (error) {
+        console.log(error);
+        alert("Error Submitting")
+        
+    }finally {
+        setsubmitloading(false);
+    }
+
+  }
 
   return (
     <div className="space-y-6 bg-black/40 backdrop-blur-sm border-2 border-cyan-400/50 rounded-lg p-6">
@@ -100,7 +180,7 @@ const ProblemSolveCodeArea = () => {
             theme={theme}
             defaultLanguage="cpp"
             value={code}
-            onChange={(value) => setcode(value || '')}
+            onChange={(value) => {setcode(value || '');setruntestcaseresponse(null)}}
             options={{
               padding: { top: 12 },
               fontSize: fontsize
@@ -110,17 +190,26 @@ const ProblemSolveCodeArea = () => {
 
         <div className="flex gap-4">
           <button
-            disabled={loading}
+            disabled={runloading}
             className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-mono px-4 py-2 rounded-md border border-pink-400 shadow-md transition-all duration-300 hover:scale-105"
             onClick={handleRun}
           >
-            {loading ? "Running..." : "Run"}
+            {runloading ? "Running..." : "Run"}
           </button>
 
           <button
-            className="bg-gradient-to-r from-green-500 to-cyan-600 hover:from-green-400 hover:to-cyan-500 text-white font-mono px-4 py-2 rounded-md border border-green-400 shadow-md transition-all duration-300 hover:scale-105"
+            disabled={runTestCaseloading}
+            className="bg-gradient-to-r from-red-500 to-orange-400 hover:from-red-400 hover:to-orange-500 text-white font-mono px-4 py-2 rounded-md border border-red-400 shadow-md transition-all duration-300 hover:scale-105"
+            onClick={handleRunTest}
           >
-            Submit
+            {!runTestCaseloading ? "Run Tests" : "Running Testcases ..."}
+          </button>
+          <button
+          disabled={submitloading}
+            className="bg-gradient-to-r from-green-500 to-cyan-600 hover:from-green-400 hover:to-cyan-500 text-white font-mono px-4 py-2 rounded-md border border-green-400 shadow-md transition-all duration-300 hover:scale-105"
+            onClick={handleSubmit}
+          >
+            {submitloading?"Submitting..." : "Submit"}
           </button>
         </div>
       </div>
@@ -150,6 +239,12 @@ const ProblemSolveCodeArea = () => {
           placeholder="Enter Custom Inputs ..."
         />
       </div>
+
+        <div>
+            {showresultmodule  && <RunTestCasesResultModule response={runteastcaseresponse} setshowresultmodule={setshowresultmodule} />}
+        </div>
+        
+
     </div>
   );
 };

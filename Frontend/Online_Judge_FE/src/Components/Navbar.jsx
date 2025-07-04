@@ -1,6 +1,20 @@
 import { Code, Trophy, User, LogOut } from "lucide-react";
 
 const RetroNavbar = () => {
+
+
+  const Options=[
+    {
+      name:"HOME",
+      route:"/home"
+    },
+    {
+      name:"COMPILER",
+      route:"/compiler"
+    }
+  ];
+
+
   return (
     <nav className="bg-black/30 backdrop-blur-md border-b-2 border-cyan-400/50 shadow-md px-4 py-3">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -14,13 +28,13 @@ const RetroNavbar = () => {
 
         {/* Navigation Links */}
         <div className="hidden md:flex items-center space-x-6 ">
-          {["Home", "Leaderboard","COMPILER"].map((link, idx) => (
+          {Options.map((option, idx) => (
             <a
               key={idx}
-              href="#"
+              href={option.route}
               className="text-cyan-300 hover:text-yellow-400 font-mono uppercase text-sm tracking-wider transition-all duration-200"
             >
-              {link}
+              {option.name}
             </a>
           ))}
         </div>

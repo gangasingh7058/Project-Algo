@@ -26,7 +26,7 @@ const ProblemSolvePage = () => {
 
             {/* Right Panel - Code Editor */}
             <div className="lg:col-span-4 max-h-[calc(100vh-100px)] overflow-y-auto">
-              <ProblemSolveCodeArea />
+              <ProblemSolveCodeArea problemId={pid} />
             </div>
           </div>
         </div>

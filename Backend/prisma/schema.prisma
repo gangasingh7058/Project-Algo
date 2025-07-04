@@ -23,6 +23,8 @@ model Solve {
   id        String  @id @default(uuid())
   success   Boolean
   error     String?
+  code      String
+  language  String  @default("cpp")
 
   // Foreign keys
   problemId String
