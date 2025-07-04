@@ -74,5 +74,57 @@ route.get('/profile', async (req, res) => {
 });
 
 
+route.get("/submission/:pid",async (req,res)=>{
+    const { usertoken } = req.headers;
+    const pid=req.params.pid;
+
+    if (!usertoken || !usertoken.startsWith("bearer ")) {
+      return res.json({
+        success: false,
+        message: "Authorization token missing or invalid"
+      });
+    }
+
+    if(!pid){
+      return res.json({
+        success: false,
+        message: "Problem Id missing"
+      });
+    }
+
+    const token = usertoken.split(" ")[1];
+
+    // Verify token
+    const decoded = jwt.verify(token, jwtpasskey);
+    const userId = decoded.id;
+
+    try {
+      const response=await prisma.solve.findMany({
+        where:{
+          userId:userId,
+          problemId:pid
+        },
+        select:{
+          code:true,
+          date:true
+        }
+      })
+
+      return res.json({
+        success:true,
+        submissions:response
+      })
+
+
+    } catch (error) {
+      return res.json({
+        success:false,
+        message:error
+      })
+    }
+
+
+})
+
 
 export default route

@@ -11,6 +11,10 @@ const RetroNavbar = () => {
     {
       name:"COMPILER",
       route:"/compiler"
+    },
+    {
+      name:"Submissions",
+      route:"/user/submissions"
     }
   ];
 

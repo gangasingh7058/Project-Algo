@@ -25,6 +25,7 @@ model Solve {
   error     String?
   code      String
   language  String  @default("cpp")
+  date      DateTime @default(now())
 
   // Foreign keys
   problemId String
