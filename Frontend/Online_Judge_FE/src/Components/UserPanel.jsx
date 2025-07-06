@@ -2,20 +2,8 @@ import { propEffect } from "framer-motion";
 import { User, Award, Target, TrendingUp, Star, Zap } from "lucide-react";
 
 const UserStatsPanel = ( { solvecount , firstname , lastname } ) => {
-  const userStats = {
-    username: "CodeWarrior",
-    rank: "Elite Hacker",
-    level: 42,
-    xp: 15420,
-    nextLevelXp: 20000,
-    problemsSolved: 187,
-    contestsWon: 23,
-    streak: 15,
-    accuracy: 87,
-  };
-
   
-  const xpProgress = (1 / 10) * 100;
+  const xpProgress = (solvecount/ 10) * 100;
 
   return (
     <div className="space-y-6">

@@ -1,7 +1,9 @@
-import { Code, Trophy, User, LogOut } from "lucide-react";
+import { Code, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const RetroNavbar = () => {
 
+  const navigate=useNavigate();
 
   const Options=[
     {
@@ -18,6 +20,12 @@ const RetroNavbar = () => {
     }
   ];
 
+  const HandleLogOut=()=>{
+
+    localStorage.clear('token');
+    navigate('/')
+
+  }
 
   return (
     <nav className="bg-black/30 backdrop-blur-md border-b-2 border-cyan-400/50 shadow-md px-2 py-3">
@@ -45,11 +53,14 @@ const RetroNavbar = () => {
 
         {/* User Actions */}
         <div className="flex items-center space-x-3">
-          <button className="flex items-center px-3 py-1.5 bg-purple-600/80 hover:bg-purple-500 text-white border-2 border-purple-400 font-mono text-sm uppercase rounded transition-all">
+          {/* <button className="flex items-center px-3 py-1.5 bg-purple-600/80 hover:bg-purple-500 text-white border-2 border-purple-400 font-mono text-sm uppercase rounded transition-all">
             <User className="w-4 h-4 mr-1" />
             Profile
-          </button>
-          <button className="p-2 bg-red-600/80 hover:bg-red-500 text-white border-2 border-red-400 rounded transition-all">
+          </button> */}
+          <button
+          className="p-2 bg-red-600/80 hover:bg-red-500 text-white border-2 border-red-400 rounded transition-all"
+          onClick={HandleLogOut}
+          >
             <LogOut className="w-4 h-4" />
           </button>
         </div>

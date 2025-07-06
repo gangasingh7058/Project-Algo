@@ -6,9 +6,11 @@ import axios from "axios";
 import getusertoken from "../Helping Functions/getusertoken";
 import { useEffect } from "react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const HomePage =() => {
 
+    const navigate=useNavigate();
     const token=getusertoken();
 
     const [userdetails,setuserdetails]=useState(null);
@@ -17,6 +19,11 @@ const HomePage =() => {
 
       const getuserdetails=async ()=>{
             
+            if(!token){
+              alert("Unknown User");
+              navigate("/")
+            }
+
             try {
               const response=await axios.get('http://localhost:3001/user/profile',{
                 headers:{
@@ -61,7 +68,7 @@ const HomePage =() => {
 
             {/* Right column - User Stats */}
             <div className="lg:col-span-1">
-              <UserStatsPanel firstname={(userdetails==null)?null:userdetails.user.firstname} lastname={(userdetails==null)?null:userdetails.user.lastname} solvecount={(userdetails==null)?null:userdetails.user.solved.length} />
+              <UserStatsPanel firstname={(userdetails==null)?null:userdetails.user.firstname} lastname={(userdetails==null)?null:userdetails.user.lastname} solvecount={(userdetails==null)?0:userdetails.user.solved.length} />
             </div>
           </div>
         </div>

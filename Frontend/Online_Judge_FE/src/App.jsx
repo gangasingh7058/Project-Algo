@@ -1,14 +1,12 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, useFetcher } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import CompilerPage from './Pages/Compiler';
-import VantaDots from './Background/vantabackground';
-import SignInPage from './Pages/SigninPage';
-import LandingPage from './Pages/LandingPage';
 import HomePage from './Pages/Home';
 import RetroSigninPage from './Pages/RetroSigninPage';
 import RegisterPage from './Pages/RegisterPage';
 import ProblemSolvePage from './Pages/ProblemSolve';
 import SubmissionsPage from './Pages/SubmissionPage';
+import { useNavigate } from 'react-router-dom';
 import './App.css'
 
 function App() {
@@ -17,7 +15,7 @@ function App() {
       {/* <VantaDots /> */}
       
       <Routes>
-        <Route path='/' element={<LandingPage />} />
+        <Route path='/' element={<EntryPage />} />
         <Route path="/compiler" element={<CompilerPage />} />
         {/* <Route path='/user/signin' element={<SignInPage />} /> */}
         <Route path='/home' element={<HomePage />} />
@@ -31,3 +29,18 @@ function App() {
 }
 
 export default App;
+
+
+const EntryPage=()=>{
+
+    const navigate=useNavigate();
+
+    useEffect(()=>{
+      navigate('/user/signin')
+    },[])
+
+    return <>
+
+    </>
+
+}

@@ -13,7 +13,7 @@ route.get('/profile', async (req, res) => {
   try {
     const { usertoken } = req.headers;
 
-    if (!usertoken || !usertoken.startsWith("bearer ")) {
+    if (!usertoken ) {
       return res.status(401).json({
         success: false,
         message: "Authorization token missing or invalid"
@@ -76,7 +76,7 @@ route.get('/profile', async (req, res) => {
 route.get('/submission',async (req,res)=>{
      const { usertoken } = req.headers;
 
-    if (!usertoken || !usertoken.startsWith("bearer ")) {
+    if (!usertoken) {
       return res.json({
         success: false,
         message: "Authorization token missing or invalid"
@@ -128,7 +128,7 @@ route.get("/submission/:pid",async (req,res)=>{
     const { usertoken } = req.headers;
     const pid=req.params.pid;
 
-    if (!usertoken || !usertoken.startsWith("bearer ")) {
+    if (!usertoken) {
       return res.json({
         success: false,
         message: "Authorization token missing or invalid"
