@@ -36,7 +36,7 @@ const EntryPage=()=>{
     const navigate=useNavigate();
 
     useEffect(()=>{
-      navigate('/user/signin')
+      navigate('/home')
     },[])
 
     return <>

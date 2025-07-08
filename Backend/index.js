@@ -4,6 +4,7 @@ import userauthroute from './routes/User/auth.js';
 import problemsroute from './routes/Problems/problem.js';
 import userProfileroute from './routes/User/profile.js';
 import problemsolveroute from './routes/Run and Submit/run_and_submit.js'
+import AiResponseroute from './routes/AI/ai_response.js'
 import cors from 'cors';
 
 dotenv.config();
@@ -22,6 +23,7 @@ app.use('/new/user', userauthroute);
 app.use('/user',userProfileroute)
 app.use('/api',problemsroute);
 app.use('/evaluate',problemsolveroute);
+app.use('/ai',AiResponseroute);
 
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);

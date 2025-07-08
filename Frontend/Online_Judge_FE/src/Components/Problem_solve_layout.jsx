@@ -56,6 +56,8 @@ const Problem_Solve_Layout = ({ problemId }) => {
           throw new Error("Failed to fetch problem");
         }
 
+        console.log(response.data);
+        
         setProblem(response.data.problem);
       } catch (error) {
         console.log(error);
@@ -74,6 +76,20 @@ const Problem_Solve_Layout = ({ problemId }) => {
     );
   }
 
+   const getDifficultyColor = (difficulty) => {
+    switch (difficulty) {
+      case "Easy":
+        return "text-green-400";
+      case "Medium":
+        return "text-yellow-400";
+      case "Hard":
+        return "text-red-400";
+      default:
+        return "text-gray-400";
+    }
+  };
+
+  
   return (
     <div className="p-6 bg-black/40 backdrop-blur-sm border-2 border-cyan-400/50 rounded-lg">
       {/* Tab Buttons */}
@@ -121,7 +137,7 @@ const Problem_Solve_Layout = ({ problemId }) => {
               )}
 
              
-              <div className="flex items-center space-x-1 text-green-400">
+              <div className={` flex items-center space-x-1 ${getDifficultyColor(problem.difficulty)}`}>
                 <Target className="w-4 h-4" />
                 <div className="font-mono text-sm">{problem.difficulty}</div>
               </div>
@@ -134,7 +150,7 @@ const Problem_Solve_Layout = ({ problemId }) => {
 
           {/* description */}
           <div className="mb-6">
-            <div className="text-lg font-bold text-cyan-400 font-mono uppercase tracking-wider mb-3">
+            <div className="whitespace-pre-line text-lg font-bold text-cyan-400 font-mono uppercase tracking-wider mb-3">
               DESCRIPTION
             </div>
             <div className="text-purple-300 font-mono text-sm leading-relaxed">
@@ -147,8 +163,8 @@ const Problem_Solve_Layout = ({ problemId }) => {
             <div className="text-lg font-bold text-cyan-400 font-mono uppercase tracking-wider mb-3">
               INPUT TYPE
             </div>
-            <div className="text-purple-300 font-mono text-sm leading-relaxed">
-              INPUT DESCRIPTION
+            <div className="whitespace-pre-line text-purple-300 font-mono text-sm leading-relaxed">
+              {problem.inputtype==""?"NO INPUT DETAILS":problem.inputtype}
             </div>
           </div>
 
@@ -157,8 +173,8 @@ const Problem_Solve_Layout = ({ problemId }) => {
             <div className="text-lg font-bold text-cyan-400 font-mono uppercase tracking-wider mb-3">
               CONSTRAINTS
             </div>
-            <div className="text-purple-300 font-mono text-sm space-y-1">
-              <div>LIST OF CONSTRAINTS</div>
+            <div className="whitespace-pre-line text-purple-300 font-mono text-sm space-y-1">
+              <div>{problem.constraints==""?"NO CONSTRAINTS":problem.constraints}</div>
             </div>
           </div>
 
@@ -178,20 +194,21 @@ const Problem_Solve_Layout = ({ problemId }) => {
                     Test Case {index + 1}
                   </span>
                 </div>
-                <div className="text-sm font-mono text-gray-300">
-                  <div>
-                    <span className="text-purple-400 font-bold">Input:</span>{" "}
-                    <pre className="inline whitespace-pre-wrap">
+                <div className="text-sm font-mono text-gray-300 space-y-2">
+                  <div className="flex items-start">
+                    <span className="text-purple-400 font-bold min-w-[70px]">Input:</span>
+                    <pre className="whitespace-pre-wrap bg-gray-800 p-2 rounded flex-1">
                       {testcase.input}
                     </pre>
                   </div>
-                  <div>
-                    <span className="text-purple-400 font-bold">Output:</span>{" "}
-                    <pre className="inline whitespace-pre-wrap">
+                  <div className="flex items-start">
+                    <span className="text-purple-400 font-bold min-w-[70px]">Output:</span>
+                    <pre className="whitespace-pre-wrap bg-gray-800 p-2 rounded flex-1">
                       {testcase.output}
                     </pre>
                   </div>
                 </div>
+
               </div>
             ))}
           </div>

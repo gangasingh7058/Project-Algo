@@ -77,9 +77,9 @@ route.get('/problem/:id', async (req, res) => {
 
 // Create a problem (only for admins)
 route.post('/problems', async (req, res) => {
-  const { title, description } = req.body;
+  const { title, description , difficulty , constraint="" , inputtype="" } = req.body;
 
-  if (!title || !description) {
+  if (!title || !description || !difficulty ) {
     return res.json({
       success: false,
       message: "Send both Title and Description"
@@ -90,7 +90,10 @@ route.post('/problems', async (req, res) => {
     const createdProblem = await prisma.problem.create({
       data: {
         title: title,
-        description: description
+        description: description,
+        difficulty:difficulty,
+        constraints:constraint,
+        inputtype:inputtype
       }
     });
 
@@ -174,60 +177,68 @@ route.get('/comments/problem/:problemId', async (req, res) => {
   }
 });
 
-route.post('/testcases/:pid',async (req,res)=>{
-    const { input , output }=req.body;
-    const { pid }=req.params
 
-    if(!input || !output || !pid){
+// create Test Cases
+route.post('/testcases/:pid', async (req, res) => {
+  const { pid } = req.params;
+  const { testcases } = req.body;
+
+  // Validate inputs
+  if (!pid || !Array.isArray(testcases) || testcases.length === 0) {
+    return res.json({
+      success: false,
+      msg: "Send a valid pid and an array of testcases"
+    });
+  }
+
+  // Check each testcase has input and output
+  const invalidCase = testcases.find(tc => !tc.input || !tc.output);
+  if (invalidCase) {
+    return res.json({
+      success: false,
+      msg: "Each testcase must have 'input' and 'output'"
+    });
+  }
+
+  try {
+    // Check if pid exists
+    const check_pid = await prisma.problem.findFirst({
+      where: { id: pid }
+    });
+
+    if (!check_pid) {
       return res.json({
-        success:false,
-        msg:"Send All Data"
-      })
+        success: false,
+        msg: "P_id does not exist or is invalid"
+      });
     }
 
+    // Map testcases to include problemId
+    const dataToInsert = testcases.map(tc => ({
+      input: tc.input,
+      output: tc.output,
+      problemId: pid
+    }));
 
-    try {
-      
-      // check if pid exists
-      const check_pid= await prisma.problem.findFirst({
-        where:{
-          id:pid
-        }
-      })
+    // Insert testcases in bulk
+    const created = await prisma.testCase.createMany({
+      data: dataToInsert
+    });
 
-      // pid donot exists
-      if(!check_pid){
-        return res.json({
-          success:false,
-          msg:"P_id does not exist or is in-valid"
-        })
-      }
+    return res.json({
+      success: true,
+      msg: "Test cases added successfully",
+      count: created.count
+    });
 
-
-      // post testcases
-      const response=await prisma.testCase.create({
-        data:{
-          input,
-          output,
-          problemId:pid
-        }
-      })
-
-      return res.json({
-        success:true,
-        msg:"Test Case Generated Successfully",
-        data:response
-      })
-
-    } catch (error) {
-      return res.json({
-        success:false,
-        msg:"Error Creating Test Cases"
-      })
-    }
-
-
-})
+  } catch (error) {
+    console.error(error);
+    return res.json({
+      success: false,
+      msg: "Error creating test cases"
+    });
+  }
+});
 
 route.get('/testcases/:pid',async (req,res)=>{
 
@@ -252,5 +263,6 @@ route.get('/testcases/:pid',async (req,res)=>{
 
 
 })
+
 
 export default route;

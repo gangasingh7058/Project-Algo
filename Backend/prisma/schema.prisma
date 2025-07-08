@@ -41,6 +41,8 @@ model Problem {
   title       String
   description String
   difficulty  String           @default("Easy")
+  constraints String           @default("")
+  inputtype   String           @default("")
 
   testCases   TestCase[]
   comments    Comment[]

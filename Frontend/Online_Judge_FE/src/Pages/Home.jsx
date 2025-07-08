@@ -21,7 +21,7 @@ const HomePage =() => {
             
             if(!token){
               alert("Unknown User");
-              navigate("/")
+              navigate("/user/signin")
             }
 
             try {

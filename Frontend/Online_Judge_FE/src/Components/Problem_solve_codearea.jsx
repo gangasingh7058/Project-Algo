@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import RunTestCasesResultModule from './RunTestCasesresultmodule';
 import getusertoken from '../Helping Functions/getusertoken';
-import {useNavigate} from 'react-router-dom'
+import {data, useNavigate} from 'react-router-dom'
 
 
 const ProblemSolveCodeArea = ( { problemId } ) => {
@@ -23,6 +23,8 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
   const [submitloading,setsubmitloading]=useState(false);
   const [showresultmodule,setshowresultmodule]=useState(false);
   const [runteastcaseresponse,setruntestcaseresponse]=useState(null);
+  const [askailoading,setaskailoading]=useState(false);
+  const [showaskai,setshowaskai]=useState(false);
   
 
   const handleOnChange = (e) => {
@@ -74,6 +76,11 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
             language: language
         })
 
+
+        if (response.data.received && response.data.received.length > 100) {
+              response.data.received = "Undefined";
+            }
+
         setruntestcaseresponse(response.data);
         console.log(response.data);
              
@@ -85,6 +92,7 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
     }finally {
         setrunTestcaseloading(false)
         setshowresultmodule(true);
+        setshowaskai(true);
     }
 
 
@@ -133,6 +141,46 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
         
     }finally {
         setsubmitloading(false);
+    }
+
+  }
+
+  const handleAskAi=async ()=>{
+
+    console.log("HERE");
+    
+
+    if(!runteastcaseresponse){
+      return alert("Try Testcases First")
+    }
+
+    if(runteastcaseresponse.success==true){
+      return alert("Your Code Already Passes All Test Cases")
+    }
+
+    try {
+      
+      setaskailoading(true);
+
+      const response=await axios.post("http://localhost:3001/ai/find_error",{
+          code,
+          pid:problemId
+         })
+
+        console.log(response.data);
+        
+      if(response.data.success==false){
+        alert(response.data.msg);
+      }
+
+      setcode(response.data.res)
+      
+    } catch (error) {
+      console.log(error);
+      return alert("Some Error Occured")
+      
+    }finally{
+      setaskailoading(false);
     }
 
   }
@@ -213,6 +261,16 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
           >
             {submitloading?"Submitting..." : "Submit"}
           </button>
+          {/*  ASK AI active when testcase fails */}
+          {showaskai && 
+            <button
+            disabled={askailoading}
+            className="bg-gradient-to-r from-red-500 to-orange-400 hover:from-red-400 hover:to-orange-500 text-white font-mono px-4 py-2 rounded-md border border-red-400 shadow-md transition-all duration-300 hover:scale-105"
+            onClick={handleAskAi}
+          >
+            {askailoading?"Wait ...":"Ask Ai"}
+          </button>
+          }
         </div>
       </div>
 
