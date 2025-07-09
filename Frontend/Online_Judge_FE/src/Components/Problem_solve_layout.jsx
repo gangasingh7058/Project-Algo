@@ -7,6 +7,8 @@ import PastsubmissionModule from "./pastSubmissionmodule";
 import { CheckCircle } from 'lucide-react';
 
 const Problem_Solve_Layout = ({ problemId }) => {
+
+
   const [problem, setProblem] = useState(null);
   const [pastSubmissions, setPastSubmissions] = useState([]);
   const [activeTab, setActiveTab] = useState("problem"); // "problem" or "submissions"
@@ -25,7 +27,7 @@ const Problem_Solve_Layout = ({ problemId }) => {
 
       try {
         const response = await axios.get(
-          `http://localhost:3001/user/submission/${problemId}`,
+          `${import.meta.env.VITE_BACKEND_PORT}/user/submission/${problemId}`,
           {
             headers: {
               usertoken: token,
@@ -49,7 +51,7 @@ const Problem_Solve_Layout = ({ problemId }) => {
     const getProblem = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:3001/api/problem/${problemId}`
+          `${import.meta.env.VITE_BACKEND_PORT}/api/problem/${problemId}`
         );
 
         if (response.data.success === false) {

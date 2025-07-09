@@ -7,6 +7,8 @@ import { useNavigate } from "react-router-dom";
 import getusertoken from "../Helping Functions/getusertoken";
 
 const SubmissionsPage = () => {
+
+
   const [expandedIndex, setExpandedIndex] = useState(null);
   const [pastSubmissions, setPastSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +30,7 @@ const SubmissionsPage = () => {
       }
       
       try {
-        const response = await axios.get("http://localhost:3001/user/submission", {
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_PORT}/user/submission`, {
           headers: { usertoken: token },
         });
 

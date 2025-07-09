@@ -1,5 +1,9 @@
 FROM node:24-alpine3.21
 
+
+# Install only g++
+RUN apk add --no-cache g++
+
 WORKDIR /app
 
 COPY package*.json ./

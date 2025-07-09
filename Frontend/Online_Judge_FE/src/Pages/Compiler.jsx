@@ -3,7 +3,10 @@ import Editor from '@monaco-editor/react';
 import axios from 'axios';
 import RetroNavbar from '../Components/Navbar';
 
+
 const CompilerPage = () => {
+
+
   const [code, setCode] = useState(`#include <iostream>\nusing namespace std;\n\nint main() {\n    int a, b;\n    cin >> a >> b;\n    cout << a + b;\n    return 0;\n}`);
   const [inputs, setInputs] = useState('');
   const [output, setOutput] = useState('');
@@ -19,7 +22,7 @@ const CompilerPage = () => {
 
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:3002/run', {
+      const res = await axios.post(`${import.meta.env.VITE_COMPILER_PORT}/run`, {
         language: 'cpp',
         code: code,
         inputs: inputs,

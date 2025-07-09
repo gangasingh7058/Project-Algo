@@ -3,7 +3,9 @@ import axios from 'axios';
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
+
 const ProblemsPanel = ({ problemssolved }) => {
+
   const navigate = useNavigate();
   const [problems, setproblem] = useState([]);
 
@@ -13,7 +15,7 @@ const ProblemsPanel = ({ problemssolved }) => {
   useEffect(() => {
     const getProblems = async () => {
       try {
-        const problemlist = await axios.get('http://localhost:3001/api/problems');
+        const problemlist = await axios.get(`${import.meta.env.VITE_BACKEND_PORT}/api/problems`);
         if (problemlist.data.success === false) {
           throw new Error("Problem fetch failed");
         }

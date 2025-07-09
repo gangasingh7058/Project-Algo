@@ -7,8 +7,11 @@ import getusertoken from "../Helping Functions/getusertoken";
 import { useEffect } from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+// import dotenv from 'dotenv'
 
 const HomePage =() => {
+
+    // dotenv.config();
 
     const navigate=useNavigate();
     const token=getusertoken();
@@ -25,7 +28,7 @@ const HomePage =() => {
             }
 
             try {
-              const response=await axios.get('http://localhost:3001/user/profile',{
+              const response=await axios.get(`${import.meta.env.VITE_BACKEND_PORT}/user/profile`,{
                 headers:{
                   usertoken:token
                 }

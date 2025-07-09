@@ -42,7 +42,7 @@ route.post('/run/:pid', async (req, res) => {
       const test = testCases[i];
 
       try {
-        const response = await axios.post('http://localhost:3002/run', {
+        const response = await axios.post(`${process.env.COMPILER_PORT}/run`, {
           code,
           language,
           inputs: test.input,

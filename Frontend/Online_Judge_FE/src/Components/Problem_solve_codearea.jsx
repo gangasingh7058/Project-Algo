@@ -8,7 +8,8 @@ import {data, useNavigate} from 'react-router-dom'
 
 const ProblemSolveCodeArea = ( { problemId } ) => {
 
-    const navigate=useNavigate();
+  // to navigate
+  const navigate=useNavigate();
 
   const [code, setcode] = useState(`#include<iostream>\nusing namespace std;\nint main(){\n\n\n return 0;\n}`);
   const [fontsize, setfontsize] = useState(16);
@@ -41,7 +42,7 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
 
     setrunloading(true);
     try {
-      const res = await axios.post('http://localhost:3002/run', {
+      const res = await axios.post(`${import.meta.env.VITE_COMPILER_PORT}/run`, {
         language: language,
         code: code,
         inputs: codeinput,
@@ -71,7 +72,7 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
 
     try {
         
-        const response=await axios.post(`http://localhost:3001/evaluate/run/${problemId}`,{
+        const response=await axios.post(`${import.meta.env.VITE_BACKEND_PORT}/evaluate/run/${problemId}`,{
             code: code,
             language: language
         })
@@ -121,7 +122,7 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
 
     try {
         
-        const response=await axios.post(`http://localhost:3001/evaluate/submit/${problemId}`,{
+        const response=await axios.post(`${import.meta.env.VITE_BACKEND_PORT}/evaluate/submit/${problemId}`,{
             code,
             language,
             usertoken:token
@@ -162,7 +163,7 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
       
       setaskailoading(true);
 
-      const response=await axios.post("http://localhost:3001/ai/find_error",{
+      const response=await axios.post(`${import.meta.env.VITE_BACKEND_PORT}/ai/find_error`,{
           code,
           pid:problemId
          })

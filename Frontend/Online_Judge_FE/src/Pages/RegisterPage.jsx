@@ -29,7 +29,7 @@ const RegisterPage = () => {
         setIsLoading(true);
 
         try {
-            const response = await axios.post('http://localhost:3001/new/user/register', userDetails);
+            const response = await axios.post(`${import.meta.env.VITE_BACKEND_PORT}/new/user/register`, userDetails);
 
             // User Register Fails
             if (response.data.success === false) {
@@ -217,22 +217,7 @@ const RegisterPage = () => {
         </div>
 
         {/* Decorative footer */}
-        <div className="mt-2 text-center">
-          <div className="flex justify-center gap-4 text-2xl">
-            {["◆", "◇", "◆", "◇", "◆"].map((s, i) => (
-              <span
-                key={i}
-                className="text-cyan-400 animate-pulse font-mono"
-                style={{ animationDelay: `${i * 0.2}s`, animationDuration: "1.5s" }}
-              >
-                {s}
-              </span>
-            ))}
-          </div>
-          <p className="text-purple-300 font-mono text-xs mt-2 tracking-widest">
-            INSERT COIN TO CONTINUE
-          </p>
-        </div>
+        
       </div>
     </div>
   );

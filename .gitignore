@@ -1,6 +1,7 @@
 # Ignore environment files
 Backend/.env
 Compiler/.env
+Frontend/Online_judge_FE/.env
 
 # Ignore node_modules folders
 Backend/node_modules/
