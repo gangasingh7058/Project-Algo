@@ -10,13 +10,14 @@ import cors from 'cors';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000; 
+const PORT = process.env.PORT || 3001; 
 
 app.use(cors());
 app.use(express.json()); // parse incoming JSON requests
 
 
-app.get('/',(req,res)=>{
+app.get('/',(req,res)=>{  
+
   res.send("<h1>Hello From Server</h1>")
 })
 app.use('/new/user', userauthroute);
