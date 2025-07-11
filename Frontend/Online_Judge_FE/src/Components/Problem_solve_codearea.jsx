@@ -46,7 +46,7 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
         language: language,
         code: code,
         inputs: codeinput,
-        mode: 'OJ'
+        mode: 'compiler'
       });
 
       if (res.data.success) {
@@ -78,7 +78,7 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
         })
 
 
-        if (response.data.received && response.data.received.length > 100) {
+        if (response.data.received && response.data.received.length > 1000) {
               response.data.received = "Undefined";
             }
 
