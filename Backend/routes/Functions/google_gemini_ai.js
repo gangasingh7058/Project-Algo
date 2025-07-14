@@ -34,7 +34,7 @@ ${code}
 
     return response.text; // ✅ FIX: added await for response.text()
   } catch (err) {
-    console.error("Gemini error:", err);
+    // console.error("Gemini error:", err);
     return "Error generating response from Gemini.";
   }
 }

@@ -232,10 +232,11 @@ route.post('/testcases/:pid', async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     return res.json({
       success: false,
-      msg: "Error creating test cases"
+      msg: "Error creating test cases",
+      error:error.message
     });
   }
 });

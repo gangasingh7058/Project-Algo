@@ -92,7 +92,7 @@ route.post('/run/:pid', async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Server error:", error);
+    // console.error("Server error:", error);
     return res.status(500).json({
       success: false,
       errorcode:6,

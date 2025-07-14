@@ -62,7 +62,6 @@ route.post('/signin', async (req, res) => {
 
 // Register route
 route.post('/register', async (req, res) => {
-  console.log("HERE");
   
   const { username, password, firstname, lastname, dob } = req.body;
 

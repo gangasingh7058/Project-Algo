@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  compiler:
+    container_name: my-cpp-compiler
+    image: my-cpp-compiler
+    ports:
+      - "3002:3002"
+    networks:
+      - app-network
+
+  backend:
+    container_name: my-codearena-backend
+    image: my-codearena-backend
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./Backend/.env
+    depends_on:
+      - compiler
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

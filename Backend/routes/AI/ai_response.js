@@ -34,7 +34,7 @@ route.post('/find_error', async (req, res) => {
       });
     }
 
-    console.log(problemdesc.description);
+    // console.log(problemdesc.description);
 
     const response = await google_gemini_response(code, problemdesc.description);
 
@@ -43,11 +43,11 @@ route.post('/find_error', async (req, res) => {
       res: response,
     });
   } catch (error) {
-    console.error(error); // 🐞 Better debugging
+    // console.error(error); //debugging
     res.json({
       success: false,
       msg: "Internal Server Error",
-      error: error.message, // Optional: send only message
+      error: error.message, // send only message
     });
   }
 });

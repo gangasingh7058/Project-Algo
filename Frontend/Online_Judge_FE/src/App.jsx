@@ -7,6 +7,7 @@ import RegisterPage from './Pages/RegisterPage';
 import ProblemSolvePage from './Pages/ProblemSolve';
 import SubmissionsPage from './Pages/SubmissionPage';
 import { useNavigate } from 'react-router-dom';
+import PersonalBrandingComponent from './Components/personal_branding';
 import './App.css'
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
         <Route path='home/problem/:pid' element={<ProblemSolvePage />} />
         <Route path='/user/submissions' element={<SubmissionsPage />} />
       </Routes>
+      <PersonalBrandingComponent />
     </Router>
   );
 }

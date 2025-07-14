@@ -34,7 +34,7 @@ const RetroNavbar = () => {
         <div className="flex items-center space-x-2">
           <Code className="w-7 h-7 text-cyan-400 animate-pulse" />
           <h1 className="text-2xl font-bold text-cyan-400 font-mono tracking-widest retro-title-glow">
-            CODING-ARENA
+            <a href="/home">CODE-ARCADE</a>
           </h1>
         </div>
 

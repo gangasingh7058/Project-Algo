@@ -266,7 +266,7 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
           {showaskai && 
             <button
             disabled={askailoading}
-            className="bg-gradient-to-r from-red-500 to-orange-400 hover:from-red-400 hover:to-orange-500 text-white font-mono px-4 py-2 rounded-md border border-red-400 shadow-md transition-all duration-300 hover:scale-105"
+            className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-mono px-4 py-2 rounded-md border border-blue-500 shadow-md transition-all duration-300 hover:scale-105"
             onClick={handleAskAi}
           >
             {askailoading?"Wait ...":"Ask Ai"}
