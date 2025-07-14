@@ -18,7 +18,7 @@ app.use(express.json()); // parse incoming JSON requests
 
 app.get('/',(req,res)=>{  
 
-  res.send("<h1>Hello From Server</h1>")
+  res.send("<h1>Hello From CODEARENA Server</h1>")
 })
 app.use('/new/user', userauthroute);
 app.use('/user',userProfileroute)
