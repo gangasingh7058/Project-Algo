@@ -28,7 +28,7 @@ jobs:
           context: ./Backend
           file: ./Backend/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/codearcade/backend:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/codearcade-backend:latest
 
       # Step 4: Build and push compiler image
       - name: Build and Push Compiler Image
@@ -37,4 +37,4 @@ jobs:
           context: ./Compiler
           file: ./Compiler/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/codearcade/compiler:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/codearcade-compiler:latest
