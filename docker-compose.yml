@@ -2,16 +2,16 @@ version: '3.8'
 
 services:
   compiler:
-    container_name: my-cpp-compiler
-    image: my-cpp-compiler
+    container_name: codearcade-compiler
+    image: gtinna005/codearcade-compiler:latest
     ports:
       - "3002:3002"
     networks:
       - app-network
 
   backend:
-    container_name: my-codearena-backend
-    image: my-codearena-backend
+    container_name: codearcade-backend
+    image: gtinna005/codearcade-backend:latest
     ports:
       - "3001:3001"
     env_file:
