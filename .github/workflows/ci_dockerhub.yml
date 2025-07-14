@@ -1,9 +1,10 @@
 name: Build and Push Docker Images (Backend & Compiler)
 
 on:
-  push:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - main
+  workflow_dispatch: # run on manual trigger
 
 jobs:
   docker:
