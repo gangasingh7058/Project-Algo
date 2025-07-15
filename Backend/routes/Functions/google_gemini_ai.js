@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_GEMINI_API_KEY }); // ✅ FIX: wrapped in object
+const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_GEMINI_API_KEY });
 
 async function google_gemini_response(code, problemdesc) {
   const prompt = `You are an expert coding assistant.
@@ -32,11 +32,14 @@ ${code}
     contents: prompt,
   });
 
-    return response.text; // ✅ FIX: added await for response.text()
+    return response.text;
   } catch (err) {
     // console.error("Gemini error:", err);
     return "Error generating response from Gemini.";
   }
 }
+
+
+
 
 export default google_gemini_response;

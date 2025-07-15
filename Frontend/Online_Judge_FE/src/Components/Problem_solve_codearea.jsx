@@ -26,7 +26,8 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
   const [runteastcaseresponse,setruntestcaseresponse]=useState(null);
   const [askailoading,setaskailoading]=useState(false);
   const [showaskai,setshowaskai]=useState(false);
-  
+  const [gethintloading,setgethintloadinh]=useState(false);
+  const [gothint,setgothint]=useState(false);
 
   const handleOnChange = (e) => {
     if (active == 'output') return;
@@ -186,6 +187,34 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
 
   }
 
+  const handleGetHint=async ()=>{
+
+    if(gothint){
+      return alert("Hint Already Used")
+    }
+
+    try {
+      setgethintloadinh(true);
+      const response=await axios.post(`${import.meta.env.VITE_BACKEND_PORT}/ai/gethint`,{
+        pid:problemId
+      })
+
+      if(!response.data.success){
+        alert(response.data.msg);
+      }
+      else{
+        setcode(code + `\n/*\n${response.data.res}\n*/`)
+        setgothint(true);
+      }
+
+    } catch (error) {
+      alert("Error getting Hints")
+    } finally{
+      setgethintloadinh(false);
+    }
+
+  }
+
   return (
     <div className="space-y-6 bg-black/40 backdrop-blur-sm border-2 border-cyan-400/50 rounded-lg p-6">
       {/* Code Editor */}
@@ -262,11 +291,19 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
           >
             {submitloading?"Submitting..." : "Submit"}
           </button>
+          {/* Get Hints From AI */}
+          <button
+          disabled={gethintloading}
+            className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-white font-mono px-4 py-2 rounded-md border border-yellow-300 shadow-md transition-all duration-300 hover:scale-105"
+            onClick={handleGetHint}
+          >
+            {gethintloading?"Getting..." : "Get Hint"}
+          </button>
           {/*  ASK AI active when testcase fails */}
           {showaskai && 
             <button
             disabled={askailoading}
-            className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-mono px-4 py-2 rounded-md border border-blue-500 shadow-md transition-all duration-300 hover:scale-105"
+            className="bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white font-mono px-4 py-2 rounded-md border border-indigo-400 shadow-md transition-all duration-300 hover:scale-105"
             onClick={handleAskAi}
           >
             {askailoading?"Wait ...":"Ask Ai"}
