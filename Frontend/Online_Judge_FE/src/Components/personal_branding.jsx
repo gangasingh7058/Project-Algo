@@ -8,7 +8,7 @@ const PersonalBrandingComponent = () => {
       <div className="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
         {/* Branding */}
         <div className="text-center sm:text-left text-sm sm:text-base">
-          © GANGA SINGH — Built with ❤️ for Developers
+          © GANGA SINGH — Built with ❤️ for Coders
         </div>
 
         {/* Contact Links */}
