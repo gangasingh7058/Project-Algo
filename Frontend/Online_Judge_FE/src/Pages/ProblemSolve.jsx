@@ -20,12 +20,12 @@ const ProblemSolvePage = () => {
         <div className="px-6 py-6">
           <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
             {/* Left Panel - Problem Details */}
-            <div className="lg:col-span-2 max-h-[calc(100vh-100px)] overflow-y-auto">
+            <div className="lg:col-span-2 lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto">
               <Problem_Solve_Layout problemId={pid}/>
             </div>
 
             {/* Right Panel - Code Editor */}
-            <div className="lg:col-span-4 max-h-[calc(100vh-100px)] overflow-y-auto">
+            <div className="lg:col-span-4 lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto">
               <ProblemSolveCodeArea problemId={pid} />
             </div>
           </div>
