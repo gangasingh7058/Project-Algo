@@ -19,7 +19,7 @@ const PastsubmissionModule = ({ pastSubmissions }) => {
             className="border border-purple-500/30 rounded-md p-4 bg-black/30 shadow-md hover:bg-black/50 transition duration-200 cursor-pointer"
             onClick={() => toggleExpand(index)}
           >
-            <div className="flex justify-between items-center">
+            <div className="w-full flex flex-col  sm:flex-row sm:justify-between sm:items-end">
               <p className="font-semibold text-cyan-300 font-mono">Submission {index + 1}</p>
               <p className="text-sm text-purple-300 font-mono">
                 {new Date(submission.date).toLocaleString()}

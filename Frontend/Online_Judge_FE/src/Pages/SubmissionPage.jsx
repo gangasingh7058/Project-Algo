@@ -52,10 +52,10 @@ const SubmissionsPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 font-mono text-white px-6 pb-10">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 font-mono text-white pb-10">
       <RetroNavbar />
 
-      <div className="pt-6 relative z-10">
+      <div className="pt-6 relative z-10 px-6">
         <h1 className="text-5xl font-bold text-cyan-400 text-center mb-8 drop-shadow-[0_0_10px_#22d3ee]">
           Your Submissions
         </h1>

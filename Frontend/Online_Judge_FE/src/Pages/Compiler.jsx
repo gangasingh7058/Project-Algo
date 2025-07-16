@@ -45,20 +45,20 @@ const CompilerPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 px-6 pb-10 font-mono text-white relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 pb-10 font-mono text-white relative overflow-hidden">
       
       <RetroNavbar />
 
       {/* Main Content */}
-      <div className="relative z-10">
+      <div className="relative z-10 px-6">
         
         {/* Header Controls */}
         <div className="flex flex-wrap gap-4 items-center justify-between mb-6">
-          <h1 className="text-6xl font-bold text-cyan-400 pl-30 drop-shadow-[0_0_10px_#22d3ee]">
+          <h1 className="text-6xl font-bold text-cyan-400 md:pl-30 drop-shadow-[0_0_10px_#22d3ee]">
             C++ Compiler
           </h1>
 
-          <div className="flex gap-4">
+          <div className="flex flex-col md:flex-row gap-y-3 md:gap-y-0 md:gap-x-4">
             <div>
               <label className="mr-2 font-semibold text-white">Font Size:</label>
               <select
@@ -67,7 +67,9 @@ const CompilerPage = () => {
                 onChange={(e) => setFontSize(Number(e.target.value))}
               >
                 {[12, 14, 16, 18, 20].map(size => (
-                  <option className='bg-black' key={size} value={size}>{size}px</option>
+                  <option className="bg-black" key={size} value={size}>
+                    {size}px
+                  </option>
                 ))}
               </select>
             </div>
@@ -78,13 +80,14 @@ const CompilerPage = () => {
                 value={theme}
                 onChange={(e) => setTheme(e.target.value)}
               >
-                <option className='bg-black' value="vs-dark">Dark</option>
-                <option className='bg-black' value="light">Light</option>
-                <option className='bg-black' value="vs">VS</option>
-                <option className='bg-black' value="hc-black">High Contrast</option>
+                <option className="bg-black" value="vs-dark">Dark</option>
+                <option className="bg-black" value="light">Light</option>
+                <option className="bg-black" value="vs">VS</option>
+                <option className="bg-black" value="hc-black">High Contrast</option>
               </select>
             </div>
           </div>
+
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

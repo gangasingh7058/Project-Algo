@@ -1,31 +1,30 @@
-import { Code, LogOut } from "lucide-react";
+import { useState } from "react";
+import { Code, LogOut, Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const RetroNavbar = () => {
+  const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const navigate=useNavigate();
-
-  const Options=[
+  const Options = [
     {
-      name:"HOME",
-      route:"/home"
+      name: "HOME",
+      route: "/home",
     },
     {
-      name:"COMPILER",
-      route:"/compiler"
+      name: "COMPILER",
+      route: "/compiler",
     },
     {
-      name:"Submissions",
-      route:"/user/submissions"
-    }
+      name: "Submissions",
+      route: "/user/submissions",
+    },
   ];
 
-  const HandleLogOut=()=>{
-
-    localStorage.clear('token');
-    navigate('/user/signin')
-
-  }
+  const HandleLogOut = () => {
+    localStorage.clear("token");
+    navigate("/user/signin");
+  };
 
   return (
     <nav className="bg-black/30 backdrop-blur-md border-b-2 border-cyan-400/50 shadow-md px-2 py-3">
@@ -38,8 +37,8 @@ const RetroNavbar = () => {
           </h1>
         </div>
 
-        {/* Navigation Links */}
-        <div className="hidden md:flex items-center space-x-6 ">
+        {/* Desktop Nav Links */}
+        <div className="hidden md:flex items-center space-x-6">
           {Options.map((option, idx) => (
             <a
               key={idx}
@@ -51,20 +50,41 @@ const RetroNavbar = () => {
           ))}
         </div>
 
-        {/* User Actions */}
+        {/* Right Side Actions */}
         <div className="flex items-center space-x-3">
-          {/* <button className="flex items-center px-3 py-1.5 bg-purple-600/80 hover:bg-purple-500 text-white border-2 border-purple-400 font-mono text-sm uppercase rounded transition-all">
-            <User className="w-4 h-4 mr-1" />
-            Profile
-          </button> */}
+          {/* Mobile Menu Toggle Button */}
           <button
-          className="p-2 bg-red-600/80 hover:bg-red-500 text-white border-2 border-red-400 rounded transition-all"
-          onClick={HandleLogOut}
+            className="md:hidden text-cyan-300 hover:text-yellow-400"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+
+          {/* Logout Button */}
+          <button
+            className="p-2 bg-red-600/80 hover:bg-red-500 text-white border-2 border-red-400 rounded transition-all"
+            onClick={HandleLogOut}
           >
             <LogOut className="w-4 h-4" />
           </button>
         </div>
       </div>
+
+      {/* Mobile Navigation Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden flex flex-col space-y-2 mt-2 px-4">
+          {Options.map((option, idx) => (
+            <a
+              key={idx}
+              href={option.route}
+              className="text-cyan-300 hover:text-yellow-400 font-mono uppercase text-lg tracking-wider transition-all duration-200"
+              onClick={() => setIsMobileMenuOpen(false)} // close menu after click
+            >
+              {option.name}
+            </a>
+          ))}
+        </div>
+      )}
     </nav>
   );
 };

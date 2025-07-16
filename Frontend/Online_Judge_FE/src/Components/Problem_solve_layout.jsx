@@ -12,6 +12,7 @@ const Problem_Solve_Layout = ({ problemId }) => {
   const [problem, setProblem] = useState(null);
   const [pastSubmissions, setPastSubmissions] = useState([]);
   const [activeTab, setActiveTab] = useState("problem"); // "problem" or "submissions"
+  const [gotproblem,setgotproblem]=useState(null);
   const navigate = useNavigate();
 
   // Get past submissions
@@ -55,22 +56,33 @@ const Problem_Solve_Layout = ({ problemId }) => {
         );
 
         if (response.data.success === false) {
-          throw new Error("Failed to fetch problem");
+          // throw new Error("Failed to fetch problem");
+          setgotproblem(false);
         }
 
-        console.log(response.data);
+        // console.log(response.data);
         
         setProblem(response.data.problem);
+        setgotproblem(true);
       } catch (error) {
         console.log(error);
-        alert("Error Fetching Problem Details");
+        // alert("Error Fetching Problem Details");
+        setgotproblem(false);
       }
     };
 
     getProblem();
   }, [problemId]);
 
-  if (problem == null) {
+  if (gotproblem == null) {
+    return (
+      <div className="p-6 bg-black/40 backdrop-blur-sm border-2 border-cyan-400/50 rounded-lg">
+        Fetching ...
+      </div>
+    );
+  }
+
+  if (gotproblem == false) {
     return (
       <div className="p-6 bg-black/40 backdrop-blur-sm border-2 border-cyan-400/50 rounded-lg">
         Error Fetching Problem
@@ -129,25 +141,26 @@ const Problem_Solve_Layout = ({ problemId }) => {
                 {problem.title}
               </div>
             </div>
-            <div className="flex space-x-6">
-
+            {/* Right Panel FOr Solution Difficulty Time */}
+            <div className="flex flex-col md:flex-row gap-y-3 md:gap-y-0 md:space-x-6">
               {pastSubmissions.length > 0 && (
-                <div className="flex items-center space-x-1 text-green-400 gap-1">
+                <div className="flex items-center gap-1 text-green-400">
                   <CheckCircle className="w-4 h-4" />
                   <span className="font-mono text-lg">Solved</span>
                 </div>
               )}
 
-             
-              <div className={` flex items-center space-x-1 ${getDifficultyColor(problem.difficulty)}`}>
+              <div className={`flex items-center gap-1 ${getDifficultyColor(problem.difficulty)}`}>
                 <Target className="w-4 h-4" />
                 <div className="font-mono text-sm">{problem.difficulty}</div>
               </div>
-              <div className="flex items-center space-x-1 text-purple-300">
+
+              <div className="flex items-center gap-1 text-purple-300">
                 <Clock className="w-4 h-4" />
                 <div className="font-mono text-sm">30 MIN</div>
               </div>
             </div>
+
           </div>
 
           {/* description */}

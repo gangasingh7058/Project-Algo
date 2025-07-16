@@ -17,12 +17,13 @@ const HomePage =() => {
     const token=getusertoken();
 
     const [userdetails,setuserdetails]=useState(null);
-    
+    const [verifieluser,setverifieduser]=useState(true);
     useEffect(()=>{
 
       const getuserdetails=async ()=>{
             
             if(!token){
+              setverifieduser(false);
               alert("Unknown User");
               navigate("/user/signin")
             }
@@ -51,7 +52,11 @@ const HomePage =() => {
 
     },[])
 
-
+    if(verifieluser==false){
+      return <>
+      
+      </>
+    }
 
   return (
     <div className="min-h-screen bg-[url('/retro-home-bg.jpg')] bg-cover bg-no-repeat bg-center bg-fixed relative overflow-hidden flex flex-col">

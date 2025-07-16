@@ -77,7 +77,7 @@ const ProblemsPanel = ({ problemssolved }) => {
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4 flex-wrap">
-                  <div className="flex space-x-2 flex-wrap">
+                  <div className="flex flex-wrap gap-2">
                     {problem.tags.map((tagobj) => (
                       <span
                         key={tagobj.tag.id}
