@@ -58,7 +58,7 @@ const handleSubmit = async (e) => {
 
   return (
     <div className="min-h-screen bg-[url('/retro-bg.jpg')] bg-cover bg-center bg-no-repeat flex items-center justify-center px-4">
-      <div className="bg-black/80 border-2 border-cyan-400 shadow-2xl shadow-cyan-400/25 backdrop-blur-sm rounded-lg overflow-hidden w-full max-w-md max-h-[95dvh] p-8">
+      <div className="bg-black/80 border-2 border-cyan-400 shadow-2xl shadow-cyan-400/25 backdrop-blur-sm rounded-lg overflow-hidden w-full max-w-md p-8">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="retro-title-glow mb-4">
