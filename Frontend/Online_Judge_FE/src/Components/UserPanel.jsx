@@ -25,7 +25,7 @@ const UserStatsPanel = ( { solvecount , firstname , lastname } ) => {
           </div>
           <div className="w-full bg-gray-700 rounded-full h-2">
             <div
-              className="bg-gradient-to-r from-cyan-400 to-purple-600 h-2 rounded-full transition-all duration-300"
+              className="bg-gradient-to-r from-cyan-400 to-purple-600 h-2 rounded-full transition-all duration-2000"
               style={{ width: `${xpProgress}%` }}
             ></div>
           </div>

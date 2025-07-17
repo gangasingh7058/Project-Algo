@@ -1,16 +1,17 @@
+ 
+
 import { Code2, CheckCircle, XCircle } from "lucide-react";
 import axios from 'axios';
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { motion, AnimatePresence } from "framer-motion";
 
 const ProblemsPanel = ({ problemssolved }) => {
-
   const navigate = useNavigate();
   const [problems, setproblem] = useState([]);
 
-  // Convert solved list to Set of pids for quick lookup
-  const solvedSet = new Set(problemssolved.map(p => p.problemId)); // adjust key if needed
+   // Convert solved list to Set of pids for quick lookup
+  const solvedSet = new Set(problemssolved.map(p => p.problemId));
 
   useEffect(() => {
     const getProblems = async () => {
@@ -30,14 +31,10 @@ const ProblemsPanel = ({ problemssolved }) => {
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
-      case "Easy":
-        return "text-green-400";
-      case "Medium":
-        return "text-yellow-400";
-      case "Hard":
-        return "text-red-400";
-      default:
-        return "text-gray-400";
+      case "Easy": return "text-green-400";
+      case "Medium": return "text-yellow-400";
+      case "Hard": return "text-red-400";
+      default: return "text-gray-400";
     }
   };
 
@@ -51,54 +48,60 @@ const ProblemsPanel = ({ problemssolved }) => {
 
       {/* Problem List */}
       <div className="space-y-3">
-        {problems.map((problem) => {
-          const isSolved = solvedSet.has(problem.id); // ✅ check if solved
+        <AnimatePresence>
+          {problems.map((problem) => {
+            const isSolved = solvedSet.has(problem.id);
 
-          return (
-            <div
-              key={problem.id}
-              className={`${
-                isSolved ? "bg-green-500/30" : "bg-black/30"
-              } border border-purple-500/30 rounded-lg py-4 px-6 hover:border-purple-400/50 transition-colors`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-3">
-                  {isSolved ? (
-                    <CheckCircle className="w-5 h-5 text-green-400" />
-                  ) : (
-                    <XCircle className="w-5 h-5 text-gray-500" />
-                  )}
-                  <h3 className="text-white text-2xl font-mono font-bold">{problem.title}</h3>
-                </div>
-                <span className={`font-mono font-bold ${getDifficultyColor(problem.difficulty)} text-xl`}>
-                  {problem.difficulty}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4 flex-wrap">
-                  <div className="flex flex-wrap gap-2">
-                    {problem.tags.map((tagobj) => (
-                      <span
-                        key={tagobj.tag.id}
-                        className="px-2 py-1 bg-purple-600/30 text-purple-300 rounded text-xs font-mono"
-                      >
-                        {tagobj.tag.tagName}
-                      </span>
-                    ))}
+            return (
+              <motion.div
+                key={problem.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className={`${
+                  isSolved ? "bg-green-500/30" : "bg-black/30"
+                } border border-purple-500/30 rounded-lg py-4 px-6 hover:border-purple-400/50 transition-colors`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-3">
+                    {isSolved ? (
+                      <CheckCircle className="w-5 h-5 text-green-400" />
+                    ) : (
+                      <XCircle className="w-5 h-5 text-gray-500" />
+                    )}
+                    <h3 className="text-white text-2xl font-mono font-bold">{problem.title}</h3>
                   </div>
+                  <span className={`font-mono font-bold ${getDifficultyColor(problem.difficulty)} text-xl`}>
+                    {problem.difficulty}
+                  </span>
                 </div>
 
-                <button 
-                  className="bg-cyan-600/80 hover:bg-cyan-500 text-black border border-cyan-400 font-mono uppercase text-xs px-3 py-1 rounded transition-all"
-                  onClick={() => navigate(`/home/problem/${problem.id}`)}
-                >
-                  Solve
-                </button>
-              </div>
-            </div>
-          );
-        })}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4 flex-wrap">
+                    <div className="flex flex-wrap gap-2">
+                      {problem.tags.map((tagobj) => (
+                        <span
+                          key={tagobj.tag.id}
+                          className="px-2 py-1 bg-purple-600/30 text-purple-300 rounded text-xs font-mono"
+                        >
+                          {tagobj.tag.tagName}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button 
+                    className="bg-cyan-600/80 hover:bg-cyan-500 text-black border border-cyan-400 font-mono uppercase text-xs px-3 py-1 rounded transition-all"
+                    onClick={() => navigate(`/home/problem/${problem.id}`)}
+                  >
+                    Solve
+                  </button>
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
       </div>
     </div>
   );
