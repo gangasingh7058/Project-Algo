@@ -17,7 +17,7 @@ const HomePage =() => {
     const token=getusertoken();
 
     const [userdetails,setuserdetails]=useState(null);
-    const [verifieluser,setverifieduser]=useState(true);
+    const [verifieluser,setverifieduser]=useState(false);
     useEffect(()=>{
 
       const getuserdetails=async ()=>{
@@ -26,6 +26,9 @@ const HomePage =() => {
               setverifieduser(false);
               alert("Unknown User");
               navigate("/user/signin")
+            }
+            else{
+              setverifieduser(true);
             }
 
             try {
@@ -44,6 +47,7 @@ const HomePage =() => {
               
             } catch (error) {
                 // console.log(error);
+                if(verifieluser==false)return;
                 alert("Error Fetching User Details");
                  
             }
