@@ -5,6 +5,7 @@ import axios from "axios";
 import RetroNavbar from "../Components/Navbar";
 import { useNavigate } from "react-router-dom";
 import getusertoken from "../Helping Functions/getusertoken";
+import { motion, AnimatePresence } from "framer-motion";
 
 const SubmissionsPage = () => {
 
@@ -96,22 +97,32 @@ const SubmissionsPage = () => {
                 </div>
 
                 {/* Code Viewer */}
-                {expandedIndex === index && (
-                  <div className="border-t border-cyan-400/10">
-                    <Editor
-                      height="300px"
-                      language="cpp"
-                      value={sub.code}
-                      theme="vs-dark"
-                      options={{
-                        readOnly: true,
-                        fontSize: 16,
-                        minimap: { enabled: false },
-                        padding: { top: 10 },
-                      }}
-                    />
-                  </div>
-                )}
+                <AnimatePresence initial={false}>
+                    {expandedIndex === index && (
+                      <motion.div
+                        key="editor"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.6 }}
+                        className="border-t border-cyan-400/10"
+                      >
+                        <Editor
+                          height="300px"
+                          language="cpp"
+                          value={sub.code}
+                          theme="vs-dark"
+                          options={{
+                            readOnly: true,
+                            fontSize: 16,
+                            minimap: { enabled: false },
+                            padding: { top: 10 },
+                          }}
+                        />
+                      </motion.div>
+                    )}
+                </AnimatePresence>
+
               </div>
             ))}
           </div>

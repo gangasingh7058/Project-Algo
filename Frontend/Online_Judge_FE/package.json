@@ -16,7 +16,7 @@
     "@uiw/react-codemirror": "^4.23.13",
     "axios": "^1.10.0",
     "dotenv": "^17.1.0",
-    "framer-motion": "^12.19.2",
+    "framer-motion": "^12.23.6",
     "lucide-react": "^0.525.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

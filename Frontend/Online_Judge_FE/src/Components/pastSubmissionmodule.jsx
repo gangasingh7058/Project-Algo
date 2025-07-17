@@ -1,5 +1,7 @@
 import { useState } from "react";
 import Editor from "@monaco-editor/react";
+import { motion, AnimatePresence } from "framer-motion";
+
 
 const PastsubmissionModule = ({ pastSubmissions }) => {
   const [expandedIndex, setExpandedIndex] = useState(null);
@@ -26,23 +28,34 @@ const PastsubmissionModule = ({ pastSubmissions }) => {
               </p>
             </div>
 
-            {expandedIndex === index && (
-              <div className="mt-4">
-                <Editor
-                  height="300px"
-                  defaultLanguage="cpp"
-                  defaultValue={submission.code}
-                  theme="vs-dark"
-                  options={{
-                    readOnly: true,
-                    fontSize: 14,
-                    minimap: { enabled: false },
-                    scrollBeyondLastLine: false,
-                    wordWrap: "on",
-                  }}
-                />
-              </div>
-            )}
+            <AnimatePresence initial={false}>
+                {expandedIndex === index && (
+                  <motion.div
+                      key="editor"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.6 }}
+                      className="border-t border-cyan-400/10"
+                    >
+                      <div className="mt-4">
+                        <Editor
+                          height="300px"
+                          defaultLanguage="cpp"
+                          defaultValue={submission.code}
+                          theme="vs-dark"
+                          options={{
+                            readOnly: true,
+                            fontSize: 14,
+                            minimap: { enabled: false },
+                            scrollBeyondLastLine: false,
+                            wordWrap: "on",
+                          }}
+                        />
+                      </div>
+                  </motion.div>
+                )}
+            </AnimatePresence>
           </div>
         ))
       )}
