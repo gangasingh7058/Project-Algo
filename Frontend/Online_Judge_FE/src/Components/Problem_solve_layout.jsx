@@ -40,7 +40,8 @@ const Problem_Solve_Layout = ({ problemId }) => {
           setPastSubmissions(response.data.submissions);
         }
       } catch (error) {
-        console.log(error);
+        // console.log(error);\
+        alert("Error Fetching Past Submission Data");
       }
     };
 
@@ -65,8 +66,8 @@ const Problem_Solve_Layout = ({ problemId }) => {
         setProblem(response.data.problem);
         setgotproblem(true);
       } catch (error) {
-        console.log(error);
-        // alert("Error Fetching Problem Details");
+        // console.log(error);
+        alert("Error Fetching Problem Details");
         setgotproblem(false);
       }
     };

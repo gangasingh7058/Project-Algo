@@ -54,7 +54,7 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
         setcodeoutput(res.data.verdict);
         settodisplay(res.data.verdict);
       } else {
-        console.log(res.data);        
+        // console.log(res.data);        
         setcodeoutput("Compilation Error");
         settodisplay("Compilation Error");
       }
@@ -84,12 +84,12 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
             }
 
         setruntestcaseresponse(response.data);
-        console.log(response.data);
+        // console.log(response.data);
              
 
     } catch (error) {
-        console.log(error);
-        console.log("Some Error Occured While Running Test Cases");
+        // console.log(error);
+        alert("Some Error Occured While Running Test Cases");
                
     }finally {
         setrunTestcaseloading(false)
@@ -138,7 +138,7 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
         
 
     } catch (error) {
-        console.log(error);
+        // console.log(error);
         alert("Error Submitting")
         
     }finally {
@@ -148,10 +148,7 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
   }
 
   const handleAskAi=async ()=>{
-
-    console.log("HERE");
-    
-
+ 
     if(!runteastcaseresponse){
       return alert("Try Testcases First")
     }
@@ -169,7 +166,7 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
           pid:problemId
          })
 
-        console.log(response.data);
+        // console.log(response.data);
         
       if(response.data.success==false){
         alert(response.data.msg);
@@ -178,7 +175,7 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
       setcode(response.data.res)
       
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       return alert("Some Error Occured")
       
     }finally{

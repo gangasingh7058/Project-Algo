@@ -24,7 +24,7 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log(userDetails);
+        // console.log(userDetails);
 
         setIsLoading(true);
 
@@ -38,7 +38,7 @@ const RegisterPage = () => {
             // User SignIn Success
             localStorage.setItem('token', `bearer: ${response.data.jwt_token}`);
             // Redirect To HomePage
-            console.log(response.data);
+            // console.log(response.data);
             navigate('/home')
     }
         } catch (error) {

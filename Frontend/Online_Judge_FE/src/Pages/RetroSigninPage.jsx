@@ -27,7 +27,7 @@ const RetroSigninPage = () => {
 const handleSubmit = async (e) => {
   e.preventDefault();
 
-  console.log(userdetails);
+  // console.log(userdetails);
   // return ;
   
 
@@ -43,7 +43,7 @@ const handleSubmit = async (e) => {
       // User SignIn Success
       localStorage.setItem('token', `bearer ${response.data.jwt_token}`);
       // Redirect To HomePage
-      console.log(response.data);
+      // console.log(response.data);
       navigate('/home')
     }
 

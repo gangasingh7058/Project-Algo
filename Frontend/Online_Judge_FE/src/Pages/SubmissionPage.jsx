@@ -35,12 +35,12 @@ const SubmissionsPage = () => {
           headers: { usertoken: token },
         });
 
-        console.log(response.data);
+        // console.log(response.data);
         
         if (response.data.success) {
           setPastSubmissions(response.data.solved);
         } else {
-          console.log(response.data.message);
+          // console.log(response.data.message);
         }
       } catch (error) {
         console.error("Error fetching submissions:", error);

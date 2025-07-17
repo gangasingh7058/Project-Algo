@@ -3,7 +3,6 @@ import Editor from '@monaco-editor/react';
 import axios from 'axios';
 import RetroNavbar from '../Components/Navbar';
 
-
 const CompilerPage = () => {
 
 
@@ -29,7 +28,7 @@ const CompilerPage = () => {
         mode: 'compiler',
       });
 
-      console.log(res.data);
+      // console.log(res.data);
       
 
       if (res.data.success) {
