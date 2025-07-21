@@ -1,10 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Editor from "@monaco-editor/react";
 import { motion, AnimatePresence } from "framer-motion";
+import getusertoken from "../Helping Functions/getusertoken";
 
 
 const PastsubmissionModule = ({ pastSubmissions }) => {
   const [expandedIndex, setExpandedIndex] = useState(null);
+  const [token,setusertoken]=useState(null);
+
+
+  useEffect(()=>{
+
+
+    const checkusersignin=()=>{
+        setusertoken(getusertoken());
+    }
+
+    checkusersignin();
+  })
 
   const toggleExpand = (index) => {
     setExpandedIndex(expandedIndex === index ? null : index);
@@ -13,7 +26,7 @@ const PastsubmissionModule = ({ pastSubmissions }) => {
   return (
     <div className="bg-black/40 backdrop-blur-sm border-2 border-cyan-400/50 rounded-lg p-4 max-h-[75vh] overflow-y-auto space-y-4">
       {pastSubmissions.length === 0 ? (
-        <p className="text-center text-purple-300 font-mono">No past submissions found.</p>
+        <p className="text-center text-purple-300 font-mono">{token?"No past submissions found.":" Login to See Submissions "}</p>
       ) : (
         pastSubmissions.map((submission, index) => (
           <div

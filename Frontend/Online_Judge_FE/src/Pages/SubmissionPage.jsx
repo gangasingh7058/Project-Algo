@@ -13,6 +13,7 @@ const SubmissionsPage = () => {
   const [expandedIndex, setExpandedIndex] = useState(null);
   const [pastSubmissions, setPastSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [token,settoken]=useState(null);
 
   const navigate = useNavigate();
 
@@ -22,17 +23,18 @@ const SubmissionsPage = () => {
 
   useEffect(() => {
     const getSubmissions = async () => {
-      const token = getusertoken();
-
-      if (!token) {
-        alert("Unknown User");
-        navigate("/user/signin");
+     await settoken(getusertoken());
+      const temptoken=getusertoken();
+      if (!temptoken) {
+        // alert("Unknown User");
+        // navigate("/user/signin");
+        setLoading(false);
         return;
       }
       
       try {
         const response = await axios.get(`${import.meta.env.VITE_BACKEND_PORT}/user/submission`, {
-          headers: { usertoken: token },
+          headers: { usertoken: temptoken },
         });
 
         // console.log(response.data);
@@ -67,7 +69,7 @@ const SubmissionsPage = () => {
           </div>
         ) : pastSubmissions.length === 0 ? (
           <div className="text-center text-cyan-300 text-xl mt-20">
-            No submissions yet.
+            {token?"No submissions yet.":"Login to see Submissions"}
           </div>
         ) : (
           <div className="max-w-5xl mx-auto space-y-6">

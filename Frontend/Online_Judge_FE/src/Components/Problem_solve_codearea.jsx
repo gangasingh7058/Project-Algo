@@ -1,15 +1,11 @@
 import Editor from '@monaco-editor/react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
 import RunTestCasesResultModule from './RunTestCasesresultmodule';
 import getusertoken from '../Helping Functions/getusertoken';
-import {data, useNavigate} from 'react-router-dom'
 
 
 const ProblemSolveCodeArea = ( { problemId } ) => {
-
-  // to navigate
-  const navigate=useNavigate();
 
   const [code, setcode] = useState(`#include<iostream>\nusing namespace std;\nint main(){\n\n\n return 0;\n}`);
   const [fontsize, setfontsize] = useState(16);
@@ -103,21 +99,25 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
 
   const handleSubmit=async ()=>{
 
+    let token=getusertoken()
+    if(token==null){
+        alert("SignIn To Submit");
+        return ;
+    }
+    
+    token=token.split(" ")[1];
+
     if(runteastcaseresponse==null){
         alert("Run Test Cases First");
         return;
     }
 
     if(runteastcaseresponse.success==false){
-        alert("All Test Cases not passes");
+        alert("All Test Cases not passed");
         return;
     }
 
-    let token=getusertoken().split(" ")[1];
-    if(token==null){
-        alert("Unknown User");
-        navigate('/user/signin');
-    }
+    
 
     setsubmitloading(true);
 

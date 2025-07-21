@@ -21,8 +21,8 @@ const Problem_Solve_Layout = ({ problemId }) => {
       const token = getusertoken();
 
       if (!token) {
-        alert("Unknown User");
-        navigate("/user/signin");
+        // alert("Unknown User");
+        // navigate("/user/signin");
         return;
       }
 

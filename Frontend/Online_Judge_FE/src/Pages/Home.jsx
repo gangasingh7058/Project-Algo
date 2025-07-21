@@ -14,54 +14,44 @@ const HomePage =() => {
     // dotenv.config();
 
     const navigate=useNavigate();
-    const token=getusertoken();
+    
 
     const [userdetails,setuserdetails]=useState(null);
     const [verifieluser,setverifieduser]=useState(false);
-    useEffect(()=>{
 
-      const getuserdetails=async ()=>{
+    useEffect(() => {
+        const getuserdetails = async () => {
+          const token = getusertoken();
+          if (!token) {
+            setverifieduser(false);
+            return;
+          }
+
+          setverifieduser(true);
+
+          try {
+            console.log("USER");
             
-            if(!token){
-              setverifieduser(false);
-              alert("Unknown User");
-              navigate("/user/signin")
-            }
-            else{
-              setverifieduser(true);
-            }
-
-            try {
-              const response=await axios.get(`${import.meta.env.VITE_BACKEND_PORT}/user/profile`,{
-                headers:{
-                  usertoken:token
-                }
-              })
-
-              if(response.data.success==false){
-                throw error(response.data.message)
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_PORT}/user/profile`, {
+              headers: {
+                usertoken: token
               }
-              setuserdetails(response.data);
-                                     
-              // console.log(response.data);
-              
-            } catch (error) {
-                // console.log(error);
-                if(verifieluser==false)return;
-                alert("Error Fetching User Details");
-                 
+            });
+
+            if (response.data.success === false) {
+              throw new Error(response.data.message);
             }
-      }
 
-      getuserdetails();
+            setuserdetails(response.data);
+          } catch (error) {
+            alert("Error Fetching User Details");
+            console.error(error);
+          }
+        };
 
-    },[])
+        getuserdetails();
+      }, []);
 
-    if(verifieluser==false){
-      return <>
-      
-      </>
-    }
 
   return (
     <div className="min-h-screen bg-[url('/retro-home-bg.jpg')] bg-cover bg-no-repeat bg-center bg-fixed relative overflow-hidden flex flex-col">

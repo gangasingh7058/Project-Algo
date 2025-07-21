@@ -1,10 +1,22 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Code, LogOut, Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import getusertoken from "../Helping Functions/getusertoken";
 
 const RetroNavbar = () => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [token,settoken]=useState(null);
+
+  useEffect(()=>{
+
+    const verifyusertoken=()=>{
+      settoken(getusertoken());
+    }
+
+    verifyusertoken();
+
+  },[])
 
   const Options = [
     {
@@ -23,7 +35,8 @@ const RetroNavbar = () => {
 
   const HandleLogOut = () => {
     localStorage.clear("token");
-    navigate("/user/signin");
+    settoken(null);
+    // navigate("/user/signin");
   };
 
   return (
@@ -60,13 +73,23 @@ const RetroNavbar = () => {
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
 
-          {/* Logout Button */}
-          <button
-            className="p-2 bg-red-600/80 hover:bg-red-500 text-white border-2 border-red-400 rounded transition-all"
-            onClick={HandleLogOut}
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+          {/*Login - Logout Button */}
+          {token ? (
+              <button
+                className="p-2 bg-red-600/80 hover:bg-red-500 text-white border-2 border-red-400 rounded transition-all"
+                onClick={HandleLogOut}
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                className="p-2 hover:bg-green-500 text-white border-2 border-green-400 rounded transition-all text-sm"
+                onClick={() => navigate("/user/signin")}
+              >
+                Login
+              </button>
+            )}
+
         </div>
       </div>
 
