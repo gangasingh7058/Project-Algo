@@ -44,12 +44,13 @@ const CompilerPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 pb-10 font-mono text-white relative overflow-hidden">
-      
-      <RetroNavbar />
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 pb-10 text-white relative overflow-hidden">
+           
+          <RetroNavbar />
+          
 
       {/* Main Content */}
-      <div className="relative z-10 px-6">
+      <div className="relative z-10 px-6 font-mono">
         
         {/* Header Controls */}
         <div className="flex flex-wrap gap-4 items-center justify-between mb-6">

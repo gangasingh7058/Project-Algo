@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Code, LogOut, Menu, X } from "lucide-react";
+import { Code, LogOut, Menu, X  } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import getusertoken from "../Helping Functions/getusertoken";
 
@@ -36,7 +36,7 @@ const RetroNavbar = () => {
   const HandleLogOut = () => {
     localStorage.clear("token");
     settoken(null);
-    navigate("/user/signin");
+    // navigate("/user/signin");
   };
 
   return (
@@ -83,7 +83,7 @@ const RetroNavbar = () => {
               </button>
             ) : (
               <button
-                className="p-2 hover:bg-green-500 text-white border-2 border-green-400 rounded transition-all text-sm"
+                className="p-2 font-mono text-xl hover:bg-green-500 text-white border-2 border-green-400 rounded transition-all"
                 onClick={() => navigate("/user/signin")}
               >
                 Login
