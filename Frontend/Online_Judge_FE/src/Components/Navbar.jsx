@@ -36,7 +36,7 @@ const RetroNavbar = () => {
   const HandleLogOut = () => {
     localStorage.clear("token");
     settoken(null);
-    // navigate("/user/signin");
+    navigate("/user/signin");
   };
 
   return (
