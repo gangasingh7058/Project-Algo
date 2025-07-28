@@ -7,7 +7,7 @@ import getusertoken from '../Helping Functions/getusertoken';
 
 const ProblemSolveCodeArea = ( { problemId } ) => {
 
-  const [code, setcode] = useState(`#include<iostream>\nusing namespace std;\nint main(){\n\n\n cout<<"Hello World"<<endl;\n\n\nreturn 0;\n}`);
+  const [code, setcode] = useState(`#include<iostream>\nusing namespace std;\nint main(){\n cout<<"Hello World"<<endl;\n\nreturn 0;\n}`);
   const [fontsize, setfontsize] = useState(16);
   const [theme, settheme] = useState('vs-dark');
   const [codeinput, setcodeinput] = useState('');
@@ -39,6 +39,12 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
 
     setrunloading(true);
     try {
+      const checkifworking=await axios.get(`${import.meta.env.VITE_COMPILER_PORT}`);
+      if(!checkifworking.data){
+        setcodeoutput("Compiler Not responding");
+        settodisplay("Compiler Not responding");
+        return ;
+      }
       const res = await axios.post(`${import.meta.env.VITE_COMPILER_PORT}/run`, {
         language: language,
         code: code,
