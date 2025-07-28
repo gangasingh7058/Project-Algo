@@ -7,7 +7,7 @@ import getusertoken from '../Helping Functions/getusertoken';
 
 const ProblemSolveCodeArea = ( { problemId } ) => {
 
-  const [code, setcode] = useState(`#include<iostream>\nusing namespace std;\nint main(){\n\n\n return 0;\n}`);
+  const [code, setcode] = useState(`#include<iostream>\nusing namespace std;\nint main(){\n\n\n cout<<"Hello World"<<endl;\n\n\nreturn 0;\n}`);
   const [fontsize, setfontsize] = useState(16);
   const [theme, settheme] = useState('vs-dark');
   const [codeinput, setcodeinput] = useState('');
