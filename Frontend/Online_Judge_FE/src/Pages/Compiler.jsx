@@ -19,8 +19,15 @@ const CompilerPage = () => {
       return;
     }
 
+    let checkifworking = null
     setLoading(true);
     try {
+      checkifworking=await axios.get(`${import.meta.env.VITE_COMPILER_PORT}`);
+      if(!checkifworking.data){
+        setOutput("Compiler Not responding");
+        return ;
+      }
+
       const res = await axios.post(`${import.meta.env.VITE_COMPILER_PORT}/run`, {
         language: 'cpp',
         code: code,
@@ -37,7 +44,12 @@ const CompilerPage = () => {
         setOutput(res.data.error || "Error");
       }
     } catch (err) {
-      setOutput("Server error");
+      console.log(checkifworking);
+      
+      if(checkifworking==null){
+        setOutput("Compiler Not Responding")
+      }
+      else setOutput("Server error");
     } finally {
       setLoading(false);
     }
