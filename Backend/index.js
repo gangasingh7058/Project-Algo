@@ -10,21 +10,21 @@ import cors from 'cors';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001; 
+const PORT = process.env.PORT;
 
 app.use(cors());
 app.use(express.json()); // parse incoming JSON requests
 
 
-app.get('/',(req,res)=>{  
+app.get('/', (req, res) => {
 
   res.send("<h1>HELLO FROM CODEARENA SERVER</h1>")
 })
 app.use('/new/user', userauthroute);
-app.use('/user',userProfileroute)
-app.use('/api',problemsroute);
-app.use('/evaluate',problemsolveroute);
-app.use('/ai',AiResponseroute);
+app.use('/user', userProfileroute)
+app.use('/api', problemsroute);
+app.use('/evaluate', problemsolveroute);
+app.use('/ai', AiResponseroute);
 
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);

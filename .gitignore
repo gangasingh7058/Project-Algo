@@ -21,3 +21,8 @@ Compiler/Help_Functions/inputs/
 *.log
 *.env.local
 *.env.*.local
+
+# Ignore
+
+Frontend/Online_judge_FE/src/Pages/LandingPage.jsx
+Frontend/Online_judge_FE/public/landing.jpg

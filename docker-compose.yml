@@ -4,6 +4,8 @@ services:
     image: gtinna005/codearcade-compiler:latest
     ports:
       - "3002:3002"
+    env_file:
+      - ./Compiler/.env
     networks:
       - app-network
 
@@ -16,9 +18,23 @@ services:
       - ./Backend/.env
     depends_on:
       - compiler
+      - redis
+    networks:
+      - app-network
+
+  redis:
+    container_name: codearcade-redis
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
     networks:
       - app-network
 
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  redis_data:

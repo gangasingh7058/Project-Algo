@@ -1,85 +1,130 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import getTestCases from '../Functions/get_testcases.js';
-
+import redisClient from '../Functions/redis_config.js';
 
 const route = Router();
 const prisma = new PrismaClient();
 
 // Get all problems
 route.get('/problems', async (req, res) => {
-    try {
-        const problems = await prisma.problem.findMany({
-            include: {
-              tags: {
-                include: {
-                  tag: true, // this includes tagName
-                },
-              },
-            },
-          });
+  try {
 
-        res.json({
-            success: true,
-            problems: problems
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
+
+    // first check in redis
+
+    const cachedProblems = await redisClient.get('all-problems');
+
+    if (cachedProblems) {
+      console.log('fetched from redis');
+      return res.json({
+        success: true,
+        problems: JSON.parse(cachedProblems)
+      });
     }
+
+    // not in redis
+    // fetch from db
+    const problems = await prisma.problem.findMany({
+      include: {
+        tags: {
+          include: {
+            tag: true, // this includes tagName
+          },
+        },
+      },
+    });
+
+
+    // save to redis
+
+    const savetoredis = await redisClient.set("all-problems", JSON.stringify(problems));
+    if (savetoredis) {
+      await redisClient.expire("all-problems", 60 * 60);
+      console.log('saved to redis');
+    }
+
+    return res.json({
+      success: true,
+      problems: problems
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
 });
 
 // Get a single problem by ID
 route.get('/problem/:id', async (req, res) => {
-    const { id } = req.params;
+  const { id } = req.params;
 
-    try {
-        const problem = await prisma.problem.findUnique({
-            where: { id: id },
-            include: {
-                testCases: {
-                  orderBy:{
-                    id:'asc'
-                  },
-                  take:2
-                },
-                comments: true,
-                tags:{
-                  include:{
-                    tag:true
-                  }
-                }
-            }
-        });
+  try {
 
-        if (!problem) {
-            return res.status(404).json({
-                success: false,
-                message: 'Problem not found'
-            });
-        }
 
-        res.json({
-            success: true,
-            problem: problem
-        });
+    // first check in redis
+    const cachedProblem = await redisClient.get(`problem-${id}`);
 
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
+    if (cachedProblem) {
+      return res.json({
+        success: true,
+        problem: JSON.parse(cachedProblem)
+      });
     }
+
+    const problem = await prisma.problem.findUnique({
+      where: { id: id },
+      include: {
+        testCases: {
+          orderBy: {
+            id: 'asc'
+          },
+          take: 2
+        },
+        comments: true,
+        tags: {
+          include: {
+            tag: true
+          }
+        }
+      }
+    });
+
+    if (!problem) {
+      return res.status(404).json({
+        success: false,
+        message: 'Problem not found'
+      });
+    }
+
+    // save to redis 
+
+    const savetoredis = await redisClient.set(`problem-${id}`, JSON.stringify(problem));
+    if (savetoredis) {
+      await redisClient.expire(`problem-${id}`, 60 * 60);
+      console.log('saved to redis');
+    }
+
+    res.json({
+      success: true,
+      problem: problem
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
 });
 
 
 // Create a problem (only for admins)
 route.post('/problems', async (req, res) => {
-  const { title, description , difficulty , constraint="" , inputtype="" } = req.body;
+  const { title, description, difficulty, constraint = "", inputtype = "" } = req.body;
 
-  if (!title || !description || !difficulty ) {
+  if (!title || !description || !difficulty) {
     return res.json({
       success: false,
       message: "Send both Title and Description"
@@ -91,9 +136,9 @@ route.post('/problems', async (req, res) => {
       data: {
         title: title,
         description: description,
-        difficulty:difficulty,
-        constraints:constraint,
-        inputtype:inputtype
+        difficulty: difficulty,
+        constraints: constraint,
+        inputtype: inputtype
       }
     });
 
@@ -159,12 +204,29 @@ route.get('/comments/problem/:problemId', async (req, res) => {
   const { problemId } = req.params;
 
   try {
+
+    // check redis first
+    const cachedComments = await redisClient.get(`comments-${problemId}`);
+    if (cachedComments) {
+      return res.json({
+        success: true,
+        comments: JSON.parse(cachedComments)
+      });
+    }
+
     const comments = await prisma.comment.findMany({
       where: { problemId },
       include: { user: true }
     });
 
-    res.json({
+    // save to redis
+    const savetoredis = await redisClient.set(`comments-${problemId}`, JSON.stringify(comments));
+    if (savetoredis) {
+      await redisClient.expire(`comments-${problemId}`, 60 * 60);
+      console.log('saved to redis');
+    }
+
+    return res.json({
       success: true,
       comments
     });
@@ -236,31 +298,31 @@ route.post('/testcases/:pid', async (req, res) => {
     return res.json({
       success: false,
       msg: "Error creating test cases",
-      error:error.message
+      error: error.message
     });
   }
 });
 
-route.get('/testcases/:pid',async (req,res)=>{
+route.get('/testcases/:pid', async (req, res) => {
 
-  const { pid }=req.params
+  const { pid } = req.params
 
-    if(!pid){
-      return res.json({
-        success:false,
-        msg:"Send Problem Id"
-      })
-    }
+  if (!pid) {
+    return res.json({
+      success: false,
+      msg: "Send Problem Id"
+    })
+  }
 
-    try {
-      const result=await getTestCases(pid);      
-      return res.json(result);
-    } catch (error) {
-      return res.json({
-        success:false,
-        msg:"Error Creating Test Cases"
-      })
-    }
+  try {
+    const result = await getTestCases(pid);
+    return res.json(result);
+  } catch (error) {
+    return res.json({
+      success: false,
+      msg: "Error Creating Test Cases"
+    })
+  }
 
 
 })
