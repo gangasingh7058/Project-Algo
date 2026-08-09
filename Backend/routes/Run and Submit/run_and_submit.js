@@ -4,6 +4,7 @@ import axios from 'axios';
 import getTestCases from '../Functions/get_testcases.js';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import { executeCodeViaKafka } from '../Functions/kafka_config.js';
 
 dotenv.config();
 
@@ -42,32 +43,44 @@ route.post('/run/:pid', async (req, res) => {
       const test = testCases[i];
 
       try {
-        const response = await axios.post(`${process.env.COMPILER_PORT}/run`, {
-          code,
-          language,
-          inputs: test.input,
-          mode: "compiler",
-        });
+        let compilerResult;
+        try {
+          compilerResult = await executeCodeViaKafka({
+            code,
+            language,
+            inputs: test.input,
+            mode: "compiler",
+          });
+        } catch (kafkaErr) {
+          console.warn('Kafka execution failed or timed out, falling back to direct HTTP compiler call:', kafkaErr.message);
+          const response = await axios.post(`${process.env.COMPILER_PORT}/run`, {
+            code,
+            language,
+            inputs: test.input,
+            mode: "compiler",
+          });
+          compilerResult = response.data;
+        }
 
-        if (!response.data.success) {
+        if (!compilerResult.success) {
           return res.json({
             success: false,
             errorcode:3,
             msg: "Compilation Failed",
-            err: response.data.error,
+            err: compilerResult.error || compilerResult.err,
             failedTestCase: i,
             totalTestCases: testCases.length,
           });
         }
 
-        if (response.data.verdict.trim() !== test.output.trim()) {
+        if (compilerResult.verdict.trim() !== test.output.trim()) {
           return res.json({
             success: false,
             errorcode:4,
             msg: `Failed at Test Case ${i + 1}`,
             testcase:test.input,
             expected: test.output.trim() || "",
-            received: response.data.verdict.trim() || "",
+            received: compilerResult.verdict.trim() || "",
             failedTestCase: i + 1,
             totalTestCases: testCases.length,
           });

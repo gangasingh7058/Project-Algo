@@ -25,10 +25,10 @@ const PastsubmissionModule = ({ pastSubmissions }) => {
 
   return (
     <div className="bg-black/40 backdrop-blur-sm border-2 border-cyan-400/50 rounded-lg p-4 max-h-[75vh] overflow-y-auto space-y-4">
-      {pastSubmissions.length === 0 ? (
+      {(!pastSubmissions || pastSubmissions.length === 0) ? (
         <p className="text-center text-purple-300 font-mono">{token?"No past submissions found.":" Login to See Submissions "}</p>
       ) : (
-        pastSubmissions.map((submission, index) => (
+        (pastSubmissions || []).map((submission, index) => (
           <div
             key={index}
             className="border border-purple-500/30 rounded-md p-4 bg-black/30 shadow-md hover:bg-black/50 transition duration-200 cursor-pointer"

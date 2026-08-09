@@ -200,7 +200,7 @@ const Problem_Solve_Layout = ({ problemId }) => {
               Example Test Cases
             </div>
 
-            {problem.testCases.map((testcase, index) => (
+            {(problem?.testCases || []).map((testcase, index) => (
               <div
                 key={testcase.id || index}
                 className="mb-4 p-4 bg-black/30 border border-purple-500/30 rounded-lg"
@@ -235,12 +235,12 @@ const Problem_Solve_Layout = ({ problemId }) => {
               TOPIC
             </div>
             <div className="flex flex-wrap gap-2">
-              {problem.tags.map((tagObj, index) => (
+              {(problem?.tags || []).map((tagObj, index) => (
                 <span
                   key={index}
                   className="px-2 py-1 bg-purple-600/30 text-purple-300 rounded text-xs font-mono"
                 >
-                  {tagObj.tag.tagName}
+                  {tagObj.tag ? tagObj.tag.tagName : tagObj.tagName}
                 </span>
               ))}
             </div>

@@ -6,12 +6,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
-const ProblemsPanel = ({ problemssolved }) => {
+const ProblemsPanel = ({ problemssolved = [] }) => {
   const navigate = useNavigate();
   const [problems, setproblem] = useState([]);
 
    // Convert solved list to Set of pids for quick lookup
-  const solvedSet = new Set(problemssolved.map(p => p.problemId));
+  const solvedSet = new Set((problemssolved || []).map(p => p?.problemId));
 
   useEffect(() => {
     const getProblems = async () => {
@@ -20,7 +20,7 @@ const ProblemsPanel = ({ problemssolved }) => {
         if (problemlist.data.success === false) {
           throw new Error("Problem fetch failed");
         }
-        setproblem(problemlist.data.problems);
+        setproblem(Array.isArray(problemlist.data.problems) ? problemlist.data.problems : []);
       } catch (error) {
         alert("Error Fetching Problem List");
       }
@@ -49,7 +49,7 @@ const ProblemsPanel = ({ problemssolved }) => {
       {/* Problem List */}
       <div className="space-y-3">
         <AnimatePresence>
-          {problems.map((problem) => {
+          {(Array.isArray(problems) ? problems : []).map((problem) => {
             const isSolved = solvedSet.has(problem.id);
 
             return (
@@ -80,12 +80,12 @@ const ProblemsPanel = ({ problemssolved }) => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4 flex-wrap">
                     <div className="flex flex-wrap gap-2">
-                      {problem.tags.map((tagobj) => (
+                      {(problem.tags || []).map((tagobj) => (
                         <span
-                          key={tagobj.tag.id}
+                          key={tagobj.tag ? tagobj.tag.id : tagobj.tagId}
                           className="px-2 py-1 bg-purple-600/30 text-purple-300 rounded text-xs font-mono"
                         >
-                          {tagobj.tag.tagName}
+                          {tagobj.tag ? tagobj.tag.tagName : tagobj.tagName}
                         </span>
                       ))}
                     </div>

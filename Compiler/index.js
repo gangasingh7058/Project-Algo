@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import getfilepath from './Help_Functions/getfilepath.js'
 import runcode from "./Help_Functions/runcode.js";
 import getinputpath from "./Help_Functions/getinputpath.js";
+import startKafkaConsumer from "./kafka/kafka_consumer.js";
 
 
 dotenv.config();
@@ -52,5 +53,5 @@ app.post('/run', async (req, res) => {
 
 app.listen(port,()=>{
     console.log(`Listening in port => ${port}`);
-    
+    startKafkaConsumer().catch(err => console.warn('Kafka consumer warning:', err.message));
 })

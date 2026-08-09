@@ -6,6 +6,7 @@ import userProfileroute from './routes/User/profile.js';
 import problemsolveroute from './routes/Run and Submit/run_and_submit.js'
 import AiResponseroute from './routes/AI/ai_response.js'
 import cors from 'cors';
+import { initKafka } from './routes/Functions/kafka_config.js';
 
 dotenv.config();
 
@@ -28,4 +29,5 @@ app.use('/ai', AiResponseroute);
 
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);
+  initKafka().catch(err => console.warn('Kafka connection warning:', err.message));
 });

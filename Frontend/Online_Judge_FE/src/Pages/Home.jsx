@@ -66,12 +66,12 @@ const HomePage =() => {
             {/* Left column - Contests and Problems */}
             <div className="lg:col-span-2 space-y-6">
               <ContestsPanel />
-              <ProblemsPanel problemssolved={ (userdetails==null)?[]:userdetails.user.solved} />
+              <ProblemsPanel problemssolved={userdetails?.user?.solved || []} />
             </div>
 
             {/* Right column - User Stats */}
             <div className="lg:col-span-1">
-              <UserStatsPanel firstname={(userdetails==null)?null:userdetails.user.firstname} lastname={(userdetails==null)?null:userdetails.user.lastname} solvecount={(userdetails==null)?0:userdetails.user.solved.length} />
+              <UserStatsPanel firstname={userdetails?.user?.firstname || null} lastname={userdetails?.user?.lastname || null} solvecount={userdetails?.user?.solved?.length || 0} />
             </div>
           </div>
         </div>
