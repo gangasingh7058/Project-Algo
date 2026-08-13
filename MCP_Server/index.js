@@ -1,161 +1,165 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { z } from "zod";
-import axios from "axios";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import express from "express";
+import cors from "cors";
+import crypto from "crypto";
 import dotenv from "dotenv";
+import { createMcpServer } from "./mcp_server.js";
 
 dotenv.config();
 
-const COMPILER_URL = (process.env.COMPILER_URL || "http://localhost:3002").replace(/[;/]+$/, "");
+const PORT = parseInt(process.env.MCP_PORT || "3003", 10);
 
-// Initialize MCP Server
-const server = new McpServer({
-    name: "code-compiler-server",
-    version: "1.0.0"
+
+
+const app = express();
+app.use(express.json());
+app.use(cors());
+
+
+// Health check
+
+app.get("/health", (_req, res) => {
+    res.json({ status: "ok", server: "code-compiler-mcp", version: "1.0.0" });
 });
 
-// ============================================================
-// TOOLS
-// ============================================================
 
-/*
- * Tool: run_code
- * Compiles and executes source code in C++ or Python.
- */
-server.tool(
-    "run_code",
-    "Compiles and executes code in programming languages (cpp, python) with optional input data and returns the execution result, output, or error messages.",
+// SSE Transport  (/sse  +  /messages)
 
-    // Input Validation
-    {
-        language: z.string().describe("Target language (e.g., 'cpp', 'python')"),
-        code: z.string().describe("Source code to be compiled and executed"),
-        inputs: z.string().optional().default("").describe("Standard input (stdin) for the program"),
-    },
-    async ({ language, code, inputs }) => {
-        try {
-            // Unescape literal \n / \t and format preprocessor directives (e.g. #include)
-            let formattedCode = code
-                .replace(/\\n/g, "\n")
-                .replace(/\\r/g, "\r")
-                .replace(/\\t/g, "\t");
+/** Map of sessionId → { server, transport } */
+const sseSessions = new Map();
 
-            if (language.toLowerCase() === "cpp" || language.toLowerCase() === "c") {
-                formattedCode = formattedCode.replace(/(#(?:include\s*<[^>]+>|include\s*"[^"]+"|define\s+[^\n]+|pragma\s+[^\n]+))/g, "$1\n");
-            }
+app.get("/sse", async (req, res) => {
+    console.log("[SSE] New SSE connection");
 
-            const response = await axios.post(`${COMPILER_URL}/run`, {
-                language,
-                code: formattedCode,
-                inputs: (inputs || "").replace(/\\n/g, "\n"),
-                mode: "MCP"
-            }, {
-                timeout: 10000 // 10s HTTP timeout
-            });
+    const transport = new SSEServerTransport("/messages", res);
+    const server = createMcpServer();
 
-            const data = response.data;
+    sseSessions.set(transport.sessionId, { server, transport });
 
-            if (data.success) {
-                return {
-                    content: [
-                        {
-                            type: "text",
-                            text: JSON.stringify({
-                                success: true,
-                                verdict: data.verdict
-                            }, null, 2)
-                        }
-                    ]
-                };
-            } else {
-                return {
-                    isError: true,
-                    content: [
-                        {
-                            type: "text",
-                            text: JSON.stringify({
-                                success: false,
-                                verdict: data.verdict || "Execution failed",
-                                error: data.error || data.err || null
-                            }, null, 2)
-                        }
-                    ]
-                };
-            }
-        } catch (err) {
-            const errorMsg = err.response?.data?.error
-                || err.response?.data?.err
-                || err.message
-                || "Failed to connect to compiler backend service.";
+    // Clean up on disconnect
+    res.on("close", () => {
+        console.log(`[SSE] Client disconnected (session ${transport.sessionId})`);
+        sseSessions.delete(transport.sessionId);
+        server.close().catch(() => { });
+    });
 
-            return {
-                isError: true,
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify({
-                            success: false,
-                            error: errorMsg
-                        }, null, 2)
-                    }
-                ]
-            };
-        }
-    }
-);
-
-/*
- * Tool: check_compiler_status
- * Checks health and connectivity of the Compiler API microservice.
- */
-server.tool(
-    "check_compiler_status",
-    "Checks if the Code Compiler microservice is online and reachable.",
-    {},
-    async () => {
-        try {
-            const response = await axios.get(`${COMPILER_URL}/`, { timeout: 3000 });
-            return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify({
-                            success: true,
-                            message: typeof response.data === "string" ? response.data.replace(/<[^>]*>/g, "").trim() : "Compiler service is online"
-                        }, null, 2)
-                    }
-                ]
-            };
-        } catch (err) {
-            return {
-                isError: true,
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify({
-                            success: false,
-                            error: err.message || "Compiler service is unreachable"
-                        }, null, 2)
-                    }
-                ]
-            };
-        }
-    }
-);
-
-
-// ============================================================
-// MAIN ENTRY POINT
-// ============================================================
-
-async function main() {
-    const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error("Code Compiler MCP Server is running on stdio transport");
-}
-
-main().catch((error) => {
-    console.error("Fatal error starting Code Compiler MCP Server:", error);
-    process.exit(1);
 });
 
+app.post("/messages", async (req, res) => {
+    const sessionId = req.query.sessionId;
+    const session = sseSessions.get(sessionId);
+
+    if (!session) {
+        res.status(400).json({ error: "No active SSE session for the given sessionId" });
+        return;
+    }
+
+    await session.transport.handlePostMessage(req, res);
+});
+
+
+
+// Streamable HTTP Transport  (/mcp)
+
+const streamableSessions = new Map();
+
+app.post("/mcp", async (req, res) => {
+    console.log("[MCP] Streamable HTTP POST /mcp");
+
+    // Check for existing session
+    const sessionId = req.headers["mcp-session-id"];
+    let session = sessionId ? streamableSessions.get(sessionId) : undefined;
+
+    if (session) {
+        // Reuse existing session's transport
+        await session.transport.handleRequest(req, res);
+        return;
+    }
+
+    // Create a new session
+    const transport = new StreamableHTTPServerTransport({
+        sessionIdGenerator: () => crypto.randomUUID(),
+        onsessioninitialized: (newSessionId) => {
+            console.log(`[MCP] Session initialized: ${newSessionId}`);
+            streamableSessions.set(newSessionId, { server: mcpServer, transport });
+        }
+    });
+
+    // Clean up on session close
+    transport.onclose = () => {
+        const sid = transport.sessionId;
+        if (sid) {
+            console.log(`[MCP] Session closed: ${sid}`);
+            streamableSessions.delete(sid);
+        }
+    };
+
+    const mcpServer = createMcpServer();
+    await mcpServer.connect(transport);
+    await transport.handleRequest(req, res);
+});
+
+app.get("/mcp", async (req, res) => {
+    const sessionId = req.headers["mcp-session-id"];
+    const session = sessionId ? streamableSessions.get(sessionId) : undefined;
+
+    if (!session) {
+        res.status(400).json({ error: "No active session. Send an initialize POST first." });
+        return;
+    }
+
+    await session.transport.handleRequest(req, res);
+});
+
+app.delete("/mcp", async (req, res) => {
+    const sessionId = req.headers["mcp-session-id"];
+    const session = sessionId ? streamableSessions.get(sessionId) : undefined;
+
+    if (!session) {
+        res.status(400).json({ error: "No active session." });
+        return;
+    }
+
+    await session.transport.handleRequest(req, res);
+});
+
+
+// START SERVER
+
+
+const httpServer = app.listen(PORT, () => {
+    console.log(`Code Compiler MCP Server is running on HTTP port ${PORT}`);
+    console.log(`  SSE endpoint  →  http://0.0.0.0:${PORT}/sse`);
+    console.log(`  Streamable    →  http://0.0.0.0:${PORT}/mcp`);
+    console.log(`  Health check  →  http://0.0.0.0:${PORT}/health`);
+});
+
+
+
+
+// Graceful shutdown
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+
+async function shutdown(signal) {
+    console.log(`\n[${signal}] Shutting down…`);
+
+    // Close all SSE sessions
+    for (const [id, session] of sseSessions) {
+        await session.server.close().catch(() => { });
+        sseSessions.delete(id);
+    }
+
+    // Close all Streamable HTTP sessions
+    for (const [id, session] of streamableSessions) {
+        await session.server.close().catch(() => { });
+        streamableSessions.delete(id);
+    }
+
+    httpServer.close(() => {
+        console.log("HTTP server closed.");
+        process.exit(0);
+    });
+}

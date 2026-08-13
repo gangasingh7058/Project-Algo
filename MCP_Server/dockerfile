@@ -10,5 +10,8 @@ RUN npm install --omit=dev
 # Copy application code
 COPY . .
 
-# Run MCP server on stdio transport
+# Expose HTTP port for MCP server
+EXPOSE 3003
+
+# Run MCP server on HTTP transport
 CMD ["node", "index.js"]
