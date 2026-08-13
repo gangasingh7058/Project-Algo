@@ -33,17 +33,18 @@ const RegisterPage = () => {
 
             // User Register Fails
             if (response.data.success === false) {
-            alert(response.data.msg);
+              alert(response.data.msg || response.data.error || response.data.err || "Registration failed");
             } else {
-            // User SignIn Success
-            localStorage.setItem('token', `bearer: ${response.data.jwt_token}`);
-            // Redirect To HomePage
-            // console.log(response.data);
-            navigate('/home')
-    }
+              // User SignIn Success
+              localStorage.setItem('token', `bearer: ${response.data.jwt_token}`);
+              // Redirect To HomePage
+              // console.log(response.data);
+              navigate('/home')
+            }
         } catch (error) {
-            console.error("Error during sign in:", error);
-            alert("Something went wrong. Please try again.");
+            console.error("Error during register:", error);
+            const errMsg = error.response?.data?.msg || error.response?.data?.error || error.response?.data?.err || error.message || "Something went wrong. Please try again.";
+            alert(errMsg);
         }
         finally{
             setIsLoading(false);

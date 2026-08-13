@@ -38,7 +38,7 @@ const handleSubmit = async (e) => {
 
     // User SignIn Fails
     if (response.data.success === false) {
-      alert(response.data.msg);
+      alert(response.data.msg || response.data.error || response.data.err || "Sign in failed");
     } else {
       // User SignIn Success
       localStorage.setItem('token', `bearer ${response.data.jwt_token}`);
@@ -49,7 +49,8 @@ const handleSubmit = async (e) => {
 
   } catch (error) {
     console.error("Error during sign in:", error);
-    alert("Something went wrong. Please try again.");
+    const errMsg = error.response?.data?.msg || error.response?.data?.error || error.response?.data?.err || error.message || "Something went wrong. Please try again.";
+    alert(errMsg);
   } finally {
     setIsLoading(false);
   }

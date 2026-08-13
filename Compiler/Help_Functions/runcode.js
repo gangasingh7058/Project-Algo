@@ -61,29 +61,35 @@ const runcode = async (filepath, input_path, mode) => {
         clearTimeout(timer);
         if (killed) {
           resolve({
-            output: 'TLE Time Limit Exceeded',
-            error: 'Time Limit Exceeded',
+            output: 'Time Limit Exceeded',
+            error: 'Time Limit Exceeded (Execution took longer than 3000ms)',
+          });
+        } else if (stderr && stderr.trim()) {
+          resolve({
+            output: stdout ? stdout.trim() : 'Runtime Error',
+            error: stderr.trim(),
           });
         } else {
           resolve({
-            output: stdout || 'Execution failed',
-            error: stderr || null,
+            output: stdout ? stdout : 'No Output',
+            error: null,
           });
         }
       });
 
-      child.on('error', () => {
+      child.on('error', (err) => {
         clearTimeout(timer);
         resolve({
-          output: 'Execution failed',
-          error: 'Internal execution error',
+          output: 'Execution Error',
+          error: err ? (err.message || String(err)) : 'Internal execution error',
         });
       });
     });
   } catch (err) {
+    const errorDetails = (err.stderr && err.stderr.trim()) || (err.stdout && err.stdout.trim()) || err.message || 'Compilation or runtime error';
     return {
-      output: 'Execution failed',
-      error: err.stderr || err.message || 'Compilation or runtime error',
+      output: 'Compilation Failed',
+      error: errorDetails,
     };
   } finally {
     if (mode === 'compiler') {

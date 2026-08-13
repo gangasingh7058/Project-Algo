@@ -56,9 +56,9 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
         setcodeoutput(res.data.verdict);
         settodisplay(res.data.verdict);
       } else {
-        // console.log(res.data);        
-        setcodeoutput("Compilation Error");
-        settodisplay("Compilation Error");
+        const errorMsg = res.data.error || res.data.err || "Compilation Error";
+        setcodeoutput(errorMsg);
+        settodisplay(errorMsg);
       }
     } catch (error) {
       setcodeoutput('Server error');
@@ -90,9 +90,8 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
              
 
     } catch (error) {
-        // console.log(error);
-        alert("Some Error Occured While Running Test Cases");
-               
+        const errMsg = error.response?.data?.msg || error.response?.data?.err || error.response?.data?.error || error.message || "Some Error Occured While Running Test Cases";
+        alert(errMsg);
     }finally {
         setrunTestcaseloading(false)
         setshowresultmodule(true);
@@ -144,9 +143,8 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
         
 
     } catch (error) {
-        // console.log(error);
-        alert("Error Submitting")
-        
+        const errMsg = error.response?.data?.msg || error.response?.data?.err || error.response?.data?.error || error.message || "Error Submitting";
+        alert(errMsg);
     }finally {
         setsubmitloading(false);
     }
@@ -181,9 +179,8 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
       setcode(response.data.res)
       
     } catch (error) {
-      // console.log(error);
-      return alert("Some Error Occured")
-      
+      const errMsg = error.response?.data?.msg || error.response?.data?.err || error.response?.data?.error || error.message || "Some Error Occured";
+      return alert(errMsg);
     }finally{
       setaskailoading(false);
     }
@@ -211,7 +208,8 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
       }
 
     } catch (error) {
-      alert("Error getting Hints")
+      const errMsg = error.response?.data?.msg || error.response?.data?.err || error.response?.data?.error || error.message || "Error getting Hints";
+      alert(errMsg);
     } finally{
       setgethintloadinh(false);
     }

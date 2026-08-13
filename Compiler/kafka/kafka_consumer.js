@@ -83,17 +83,29 @@ export async function startKafkaConsumer(retriesLeft = 10, delay = 2000) {
             const input_path = getinputpath(inputs);
             const verdict = await runcode(filepath, input_path, mode);
 
-            responsePayload = {
-              jobId,
-              success: true,
-              verdict: verdict.output ? verdict.output.replace(/\r\n/g, '\n') : 'No Output',
-              err: verdict.error || 'No error'
-            };
+            if (verdict.error) {
+              responsePayload = {
+                jobId,
+                success: false,
+                verdict: verdict.output ? verdict.output.replace(/\r\n/g, '\n') : 'Execution failed',
+                err: verdict.error,
+                error: verdict.error
+              };
+            } else {
+              responsePayload = {
+                jobId,
+                success: true,
+                verdict: verdict.output ? verdict.output.replace(/\r\n/g, '\n') : 'No Output',
+                err: 'No error',
+                error: null
+              };
+            }
           } catch (err) {
             responsePayload = {
               jobId,
               success: false,
-              error: err.error || err.message || 'Unknown compilation/execution error'
+              error: err.error || err.message || 'Unknown compilation/execution error',
+              err: err.error || err.message || 'Unknown compilation/execution error'
             };
           }
 

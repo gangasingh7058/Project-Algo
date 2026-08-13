@@ -41,7 +41,7 @@ const CompilerPage = () => {
       if (res.data.success) {
         setOutput(res.data.verdict);
       } else {
-        setOutput(res.data.error || "Error");
+        setOutput(res.data.error || res.data.err || "Error");
       }
     } catch (err) {
       console.log(checkifworking);
