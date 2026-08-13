@@ -1,0 +1,14 @@
+FROM node:24-alpine3.21
+
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package*.json ./
+
+RUN npm install --omit=dev
+
+# Copy application code
+COPY . .
+
+# Run MCP server on stdio transport
+CMD ["node", "index.js"]

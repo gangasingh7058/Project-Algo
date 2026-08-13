@@ -25,6 +25,19 @@ services:
     networks:
       - app-network
 
+  mcp:
+    container_name: codearcade-mcp
+    image: gtinna005/codearcade-mcp:latest
+    build: ./MCP_Server
+    env_file:
+      - ./.env
+    depends_on:
+      - compiler
+    stdin_open: true
+    tty: true
+    networks:
+      - app-network
+
   redis:
     container_name: codearcade-redis
     image: redis:7-alpine
