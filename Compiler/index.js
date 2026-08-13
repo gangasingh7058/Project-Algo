@@ -11,20 +11,20 @@ import startKafkaConsumer from "./kafka/kafka_consumer.js";
 dotenv.config();
 
 
-const app=express();
-const port=process.env.PORT;
+const app = express();
+const port = process.env.PORT;
 
 app.use(cors());
 app.use(express.json());
 
 
 
-app.get('/',(req,res)=>{
+app.get('/health', (req, res) => {
     res.send('<H1>HELLO FROM COMPILER</H1>')
 })
 
 app.post('/run', async (req, res) => {
-    const { language='cpp', code ,inputs , mode='OJ' } = req.body;
+    const { language = 'cpp', code, inputs, mode = 'OJ' } = req.body;
 
     if (!language || !code) {
         return res.json({
@@ -37,7 +37,7 @@ app.post('/run', async (req, res) => {
 
     try {
         const filepath = getfilepath(language, code); // save file get file path
-        const input_path=getinputpath(inputs);        // save inpus as txt file
+        const input_path = getinputpath(inputs);        // save inpus as txt file
         const verdict = await runcode(filepath, input_path, mode, language);      // compiles and gives verdict
 
         if (verdict.error) {
@@ -64,7 +64,7 @@ app.post('/run', async (req, res) => {
     }
 });
 
-app.listen(port,()=>{
+app.listen(port, () => {
     console.log(`Listening in port => ${port}`);
     startKafkaConsumer().catch(err => console.warn('Kafka consumer warning:', err.message));
 })

@@ -1,8 +1,11 @@
+import dotenv from "dotenv";
+dotenv.config();
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import axios from "axios";
 
-const COMPILER_URL = (process.env.COMPILER_URL || "http://localhost:3002").replace(/[;/]+$/, "");
+
+const COMPILER_URL = (process.env.COMPILER_URL).replace(/[;/]+$/, "");
 
 // ============================================================
 // MCP SERVER FACTORY
@@ -99,7 +102,7 @@ export function createMcpServer() {
         {},
         async () => {
             try {
-                const response = await axios.get(`${COMPILER_URL}/`, { timeout: 3000 });
+                const response = await axios.get(`${COMPILER_URL}/health`, { timeout: 3000 });
                 return {
                     content: [{
                         type: "text",
