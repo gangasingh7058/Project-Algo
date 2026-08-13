@@ -16,22 +16,39 @@ if (!fs.existsSync(out_path)) {
 
 const TIME_LIMIT_MS = 3000;
 
-const runcode = async (filepath, input_path, mode) => {
-  const output_name = path.basename(filepath).split('.')[0];
-  const out_file_path = path.join(out_path, `${output_name}.exe`);
+const getPythonCmd = () => {
+  if (process.env.PYTHON_CMD) return process.env.PYTHON_CMD;
+  return process.platform === 'win32' ? 'python' : 'python3';
+};
+
+const runcode = async (filepath, input_path, mode, language) => {
+  const ext = path.extname(filepath).toLowerCase();
+  const lang = (language || '').toLowerCase();
+  const isPython = ['.py', '.python', '.py3'].includes(ext) || ['python', 'py', 'py3', 'python3'].includes(lang);
+  let out_file_path = null;
 
   try {
-    await exec(`g++ "${filepath}" -o "${out_file_path}"`);
+    let child;
+    if (isPython) {
+      const pythonCmd = getPythonCmd();
+      await exec(`"${pythonCmd}" -m py_compile "${filepath}"`);
+      child = spawn(pythonCmd, ['-B', filepath], {
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+    } else {
+      const output_name = path.basename(filepath).split('.')[0];
+      out_file_path = path.join(out_path, `${output_name}.exe`);
+      await exec(`g++ "${filepath}" -o "${out_file_path}"`);
+      child = spawn(out_file_path, {
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+    }
 
     return await new Promise((resolve) => {
       let input = '';
       if (input_path && fs.existsSync(input_path)) {
         input = fs.readFileSync(input_path, 'utf-8');
       }
-
-      const child = spawn(out_file_path, {
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
 
       let stdout = '';
       let stderr = '';
@@ -94,7 +111,9 @@ const runcode = async (filepath, input_path, mode) => {
   } finally {
     if (mode === 'compiler') {
       try { fs.rmSync(filepath, { force: true }); } catch {}
-      try { fs.rmSync(out_file_path, { force: true }); } catch {}
+      if (out_file_path) {
+        try { fs.rmSync(out_file_path, { force: true }); } catch {}
+      }
       try {
         if (input_path && fs.existsSync(input_path)) {
           fs.rmSync(input_path, { force: true });

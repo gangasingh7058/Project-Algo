@@ -27,3 +27,6 @@ Compiler/Help_Functions/inputs/
 Frontend/Online_judge_FE/src/Pages/LandingPage.jsx
 Frontend/Online_judge_FE/public/landing.jpg
 build-and-push.ps1
+
+MCP_Server/node_modules
+MCP_Server/.env

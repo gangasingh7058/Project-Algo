@@ -38,7 +38,7 @@ app.post('/run', async (req, res) => {
     try {
         const filepath = getfilepath(language, code); // save file get file path
         const input_path=getinputpath(inputs);        // save inpus as txt file
-        const verdict = await runcode(filepath,input_path,mode);      // compiles and gives verdict
+        const verdict = await runcode(filepath, input_path, mode, language);      // compiles and gives verdict
 
         if (verdict.error) {
             return res.json({

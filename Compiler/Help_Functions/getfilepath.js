@@ -16,9 +16,21 @@ if (!fs.existsSync(dir_path)) {
 
 
 
+const getExtension = (language) => {
+    const lang = (language || '').toLowerCase();
+    if (lang === 'python' || lang === 'py' || lang === 'py3' || lang === 'python3') {
+        return 'py';
+    }
+    if (lang === 'cpp' || lang === 'c++') {
+        return 'cpp';
+    }
+    return lang || 'cpp';
+};
+
 const getfilepath = (language, code) => {
+    const ext = getExtension(language);
     const uniq_file_name = uuid();
-    const filename = `${uniq_file_name}.${language}`;
+    const filename = `${uniq_file_name}.${ext}`;
     const filepath = path.join(dir_path, filename);
 
     // Write code to the file

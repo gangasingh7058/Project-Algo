@@ -6,6 +6,7 @@ import RetroNavbar from '../Components/Navbar';
 const CompilerPage = () => {
 
 
+  const [language, setLanguage] = useState('cpp');
   const [code, setCode] = useState(`#include <iostream>\nusing namespace std;\n\nint main() {\n    int a, b;\n    cin >> a >> b;\n    cout << a + b;\n    return 0;\n}`);
   const [inputs, setInputs] = useState('');
   const [output, setOutput] = useState('');
@@ -13,8 +14,25 @@ const CompilerPage = () => {
   const [fontSize, setFontSize] = useState(18);
   const [theme, setTheme] = useState('vs-dark');
 
+  const handleLanguageChange = (newLang) => {
+    setLanguage(newLang);
+    if (newLang === 'python' || newLang === 'py') {
+      if (code.includes('#include')) {
+        setCode('a, b = map(int, input().split())\nprint(a + b)');
+      }
+    } else if (newLang === 'cpp') {
+      if (code.includes('input().split()')) {
+        setCode(`#include <iostream>\nusing namespace std;\n\nint main() {\n    int a, b;\n    cin >> a >> b;\n    cout << a + b;\n    return 0;\n}`);
+      }
+    }
+  };
+
   const handleRun = async () => {
-    if (code.includes("cin") && inputs.trim() === "") {
+    if (language === 'cpp' && code.includes("cin") && inputs.trim() === "") {
+      alert("Inputs Required for Given Code");
+      return;
+    }
+    if ((language === 'python' || language === 'py') && code.includes("input()") && inputs.trim() === "") {
       alert("Inputs Required for Given Code");
       return;
     }
@@ -29,7 +47,7 @@ const CompilerPage = () => {
       }
 
       const res = await axios.post(`${import.meta.env.VITE_COMPILER_PORT}/run`, {
-        language: 'cpp',
+        language: language,
         code: code,
         inputs: inputs,
         mode: 'compiler',
@@ -67,10 +85,21 @@ const CompilerPage = () => {
         {/* Header Controls */}
         <div className="flex flex-wrap gap-4 items-center justify-between mb-6">
           <h1 className="text-6xl font-bold text-cyan-400 md:pl-30 drop-shadow-[0_0_10px_#22d3ee]">
-            C++ Compiler
+            Code Compiler
           </h1>
 
           <div className="flex flex-col md:flex-row gap-y-3 md:gap-y-0 md:gap-x-4">
+            <div>
+              <label className="mr-2 font-semibold text-white">Language:</label>
+              <select
+                className="bg-black/50 border border-cyan-400 text-white px-2 py-1 rounded"
+                value={language}
+                onChange={(e) => handleLanguageChange(e.target.value)}
+              >
+                <option className="bg-black" value="cpp">C++</option>
+                <option className="bg-black" value="python">Python</option>
+              </select>
+            </div>
             <div>
               <label className="mr-2 font-semibold text-white">Font Size:</label>
               <select
@@ -107,7 +136,7 @@ const CompilerPage = () => {
           <div className="rounded-xl overflow-hidden shadow-lg border-2 border-cyan-400/30 bg-black/30 backdrop-blur-md">
             <Editor
               height="500px"
-              defaultLanguage="cpp"
+              language={language === 'python' || language === 'py' ? 'python' : 'cpp'}
               value={code}
               theme={theme}
               onChange={(value) => setCode(value || '')}

@@ -81,7 +81,7 @@ export async function startKafkaConsumer(retriesLeft = 10, delay = 2000) {
           try {
             const filepath = getfilepath(language, code);
             const input_path = getinputpath(inputs);
-            const verdict = await runcode(filepath, input_path, mode);
+            const verdict = await runcode(filepath, input_path, mode, language);
 
             if (verdict.error) {
               responsePayload = {

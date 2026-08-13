@@ -25,6 +25,19 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
   const [gethintloading,setgethintloadinh]=useState(false);
   const [gothint,setgothint]=useState(false);
 
+  const handleLanguageChange = (newLang) => {
+    setlanguage(newLang);
+    if (newLang === 'python' || newLang === 'py') {
+      if (code.includes('#include')) {
+        setcode('print("Hello World")');
+      }
+    } else if (newLang === 'cpp') {
+      if (code === 'print("Hello World")') {
+        setcode(`#include<iostream>\nusing namespace std;\nint main(){\n cout<<"Hello World"<<endl;\n\nreturn 0;\n}`);
+      }
+    }
+  };
+
   const handleOnChange = (e) => {
     if (active == 'output') return;
     setcodeinput(e.target.value);
@@ -228,9 +241,10 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
           <select
             className="bg-black/50 border-2 border-purple-500 text-cyan-300 rounded-md px-3 py-1"
             value={language}
-            onChange={(e) => setlanguage(e.target.value)}
+            onChange={(e) => handleLanguageChange(e.target.value)}
           >
             <option value="cpp">CPP</option>
+            <option value="python">Python</option>
           </select>
 
           <select
@@ -259,7 +273,7 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
           <Editor
             height="400px"
             theme={theme}
-            defaultLanguage="cpp"
+            language={language === 'python' || language === 'py' ? 'python' : 'cpp'}
             value={code}
             onChange={(value) => {setcode(value || '');setruntestcaseresponse(null)}}
             options={{
