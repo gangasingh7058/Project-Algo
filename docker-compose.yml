@@ -31,8 +31,8 @@ services:
     build: ./MCP_Server
     ports:
       - "3003:3003"
-   env_file:
-    - .env
+    env_file:
+      - ./MCP_Server/.env
     depends_on:
       - compiler
     networks:
