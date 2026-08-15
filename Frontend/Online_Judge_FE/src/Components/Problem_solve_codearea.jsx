@@ -5,9 +5,15 @@ import RunTestCasesResultModule from './RunTestCasesresultmodule';
 import getusertoken from '../Helping Functions/getusertoken';
 
 
+const CODE_TEMPLATES = {
+  cpp: `#include<iostream>\nusing namespace std;\n\nint main(){\n cout<<"Hello World"<<endl;\n\nreturn 0;\n}`,
+  python: `print("Hello World")`,
+  javascript: `console.log("Hello World");`
+};
+
 const ProblemSolveCodeArea = ( { problemId } ) => {
 
-  const [code, setcode] = useState(`#include<iostream>\nusing namespace std;\nint main(){\n cout<<"Hello World"<<endl;\n\nreturn 0;\n}`);
+  const [code, setcode] = useState(CODE_TEMPLATES.cpp);
   const [fontsize, setfontsize] = useState(16);
   const [theme, settheme] = useState('vs-dark');
   const [codeinput, setcodeinput] = useState('');
@@ -27,14 +33,10 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
 
   const handleLanguageChange = (newLang) => {
     setlanguage(newLang);
-    if (newLang === 'python' || newLang === 'py') {
-      if (code.includes('#include')) {
-        setcode('print("Hello World")');
-      }
-    } else if (newLang === 'cpp') {
-      if (code === 'print("Hello World")') {
-        setcode(`#include<iostream>\nusing namespace std;\nint main(){\n cout<<"Hello World"<<endl;\n\nreturn 0;\n}`);
-      }
+    // If the current code matches one of the standard templates, automatically load default code for new language
+    const isStandardCode = Object.values(CODE_TEMPLATES).some(template => template.trim() === code.trim());
+    if (isStandardCode && CODE_TEMPLATES[newLang]) {
+      setcode(CODE_TEMPLATES[newLang]);
     }
   };
 
@@ -45,14 +47,18 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
   };
 
   const handleRun = async () => {
-    if (code.includes('cin') && codeinput.trim() === '') {
+    const requiresInput = 
+      (code.includes('cin') || code.includes('input()') || code.includes('readFileSync') || code.includes('Scanner')) && 
+      codeinput.trim() === '';
+
+    if (requiresInput) {
       alert('Inputs Required for Given Code');
       return;
     }
 
     setrunloading(true);
     try {
-      const checkifworking=await axios.get(`${import.meta.env.VITE_COMPILER_PORT}`);
+      const checkifworking=await axios.get(`${import.meta.env.VITE_COMPILER_PORT}/health`);
       if(!checkifworking.data){
         setcodeoutput("Compiler Not responding");
         settodisplay("Compiler Not responding");
@@ -76,7 +82,6 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
     } catch (error) {
       setcodeoutput('Server error');
     } finally {
-    //   settodisplay(codeoutput);
       setactive('output');
       setrunloading(false);
     }
@@ -243,8 +248,9 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
             value={language}
             onChange={(e) => handleLanguageChange(e.target.value)}
           >
-            <option value="cpp">CPP</option>
-            <option value="python">Python</option>
+            <option className="bg-black" value="cpp">C++</option>
+            <option className="bg-black" value="python">Python</option>
+            <option className="bg-black" value="javascript">JavaScript</option>
           </select>
 
           <select
@@ -273,7 +279,7 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
           <Editor
             height="400px"
             theme={theme}
-            language={language === 'python' || language === 'py' ? 'python' : 'cpp'}
+            language={language === 'python' || language === 'py' ? 'python' : language === 'javascript' || language === 'js' ? 'javascript' : 'cpp'}
             value={code}
             onChange={(value) => {setcode(value || '');setruntestcaseresponse(null)}}
             options={{

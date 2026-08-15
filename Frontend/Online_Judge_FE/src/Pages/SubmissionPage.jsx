@@ -111,7 +111,13 @@ const SubmissionsPage = () => {
                       >
                         <Editor
                           height="300px"
-                          language="cpp"
+                          language={
+                            sub.language ? (
+                              ['python', 'py', 'py3'].includes(sub.language.toLowerCase()) ? 'python' :
+                              ['javascript', 'js', 'node'].includes(sub.language.toLowerCase()) ? 'javascript' :
+                              ['java'].includes(sub.language.toLowerCase()) ? 'java' : 'cpp'
+                            ) : 'cpp'
+                          }
                           value={sub.code}
                           theme="vs-dark"
                           options={{

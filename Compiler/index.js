@@ -19,6 +19,10 @@ app.use(express.json());
 
 
 
+app.get('/', (req, res) => {
+    res.send('<H1>HELLO FROM COMPILER</H1>')
+})
+
 app.get('/health', (req, res) => {
     res.send('<H1>HELLO FROM COMPILER</H1>')
 })
@@ -44,7 +48,6 @@ app.post('/run', async (req, res) => {
             return res.json({
                 success: false,
                 verdict: verdict.output ? verdict.output.replace(/\r\n/g, '\n') : "Execution failed",
-                err: verdict.error,
                 error: verdict.error
             });
         }
@@ -52,14 +55,13 @@ app.post('/run', async (req, res) => {
         return res.json({
             success: true,
             verdict: verdict.output ? verdict.output.replace(/\r\n/g, '\n') : "No Output",
-            err: "No error",
             error: null
         });
     } catch (err) {
         return res.json({
             success: false,
-            error: err.error || err.message || (typeof err === 'string' ? err : "Unknown error"),
-            err: err.error || err.message || (typeof err === 'string' ? err : "Unknown error")
+            verdict: "Execution Failed",
+            error: err.error || err.message || (typeof err === 'string' ? err : "Unknown error")
         });
     }
 });

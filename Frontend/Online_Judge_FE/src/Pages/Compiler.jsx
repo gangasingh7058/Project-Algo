@@ -3,11 +3,17 @@ import Editor from '@monaco-editor/react';
 import axios from 'axios';
 import RetroNavbar from '../Components/Navbar';
 
+const COMPILER_TEMPLATES = {
+  cpp: `#include <iostream>\nusing namespace std;\n\nint main() {\n    int a, b;\n    if (cin >> a >> b) {\n        cout << a + b;\n    }\n    return 0;\n}`,
+  python: `a, b = map(int, input().split())\nprint(a + b)`,
+  javascript: `import fs from 'fs';\nconst input = fs.readFileSync(0, 'utf-8').trim().split(/\\s+/);\nif (input.length >= 2) {\n    const a = parseInt(input[0], 10);\n    const b = parseInt(input[1], 10);\n    console.log(a + b);\n}`
+};
+
 const CompilerPage = () => {
 
 
   const [language, setLanguage] = useState('cpp');
-  const [code, setCode] = useState(`#include <iostream>\nusing namespace std;\n\nint main() {\n    int a, b;\n    cin >> a >> b;\n    cout << a + b;\n    return 0;\n}`);
+  const [code, setCode] = useState(COMPILER_TEMPLATES.cpp);
   const [inputs, setInputs] = useState('');
   const [output, setOutput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -16,23 +22,18 @@ const CompilerPage = () => {
 
   const handleLanguageChange = (newLang) => {
     setLanguage(newLang);
-    if (newLang === 'python' || newLang === 'py') {
-      if (code.includes('#include')) {
-        setCode('a, b = map(int, input().split())\nprint(a + b)');
-      }
-    } else if (newLang === 'cpp') {
-      if (code.includes('input().split()')) {
-        setCode(`#include <iostream>\nusing namespace std;\n\nint main() {\n    int a, b;\n    cin >> a >> b;\n    cout << a + b;\n    return 0;\n}`);
-      }
+    const isStandardCode = Object.values(COMPILER_TEMPLATES).some(template => template.trim() === code.trim());
+    if (isStandardCode && COMPILER_TEMPLATES[newLang]) {
+      setCode(COMPILER_TEMPLATES[newLang]);
     }
   };
 
   const handleRun = async () => {
-    if (language === 'cpp' && code.includes("cin") && inputs.trim() === "") {
-      alert("Inputs Required for Given Code");
-      return;
-    }
-    if ((language === 'python' || language === 'py') && code.includes("input()") && inputs.trim() === "") {
+    const requiresInput = 
+      (code.includes('cin') || code.includes('input()') || code.includes('readFileSync') || code.includes('Scanner')) && 
+      inputs.trim() === '';
+
+    if (requiresInput) {
       alert("Inputs Required for Given Code");
       return;
     }
@@ -40,7 +41,7 @@ const CompilerPage = () => {
     let checkifworking = null
     setLoading(true);
     try {
-      checkifworking=await axios.get(`${import.meta.env.VITE_COMPILER_PORT}`);
+      checkifworking=await axios.get(`${import.meta.env.VITE_COMPILER_PORT}/health`);
       if(!checkifworking.data){
         setOutput("Compiler Not responding");
         return ;
@@ -52,9 +53,6 @@ const CompilerPage = () => {
         inputs: inputs,
         mode: 'compiler',
       });
-
-      // console.log(res.data);
-      
 
       if (res.data.success) {
         setOutput(res.data.verdict);
@@ -98,6 +96,7 @@ const CompilerPage = () => {
               >
                 <option className="bg-black" value="cpp">C++</option>
                 <option className="bg-black" value="python">Python</option>
+                <option className="bg-black" value="javascript">JavaScript</option>
               </select>
             </div>
             <div>
@@ -136,7 +135,7 @@ const CompilerPage = () => {
           <div className="rounded-xl overflow-hidden shadow-lg border-2 border-cyan-400/30 bg-black/30 backdrop-blur-md">
             <Editor
               height="500px"
-              language={language === 'python' || language === 'py' ? 'python' : 'cpp'}
+              language={language === 'python' || language === 'py' ? 'python' : language === 'javascript' || language === 'js' ? 'javascript' : 'cpp'}
               value={code}
               theme={theme}
               onChange={(value) => setCode(value || '')}

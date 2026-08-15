@@ -27,9 +27,9 @@ export function createMcpServer() {
     // ----------------------------------------------------------
     server.tool(
         "run_code",
-        "Compiles and executes code in programming languages (cpp, python) with optional input data and returns the execution result, output, or error messages.",
+        "Compiles and executes source code in supported programming languages (e.g. cpp, python, javascript) with optional stdin inputs and returns the execution output or error message.",
         {
-            language: z.string().describe("Target language (e.g., 'cpp', 'python')"),
+            language: z.string().describe("Target programming language (e.g., 'cpp', 'python', 'javascript')"),
             code: z.string().describe("Source code to be compiled and executed"),
             inputs: z.string().optional().default("").describe("Standard input (stdin) for the program"),
         },

@@ -2,35 +2,21 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { v4 as uuid } from 'uuid';
-
+import { languageRegistry } from '../languages/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const dir_path = path.join(__dirname, 'codes');
-
 
 // Make codes dir if not exists
 if (!fs.existsSync(dir_path)) {
     fs.mkdirSync(dir_path, { recursive: true });
 }
 
-
-
-const getExtension = (language) => {
-    const lang = (language || '').toLowerCase();
-    if (lang === 'python' || lang === 'py' || lang === 'py3' || lang === 'python3') {
-        return 'py';
-    }
-    if (lang === 'cpp' || lang === 'c++') {
-        return 'cpp';
-    }
-    return lang || 'cpp';
-};
-
 const getfilepath = (language, code) => {
-    const ext = getExtension(language);
+    const handler = languageRegistry.getHandler(language);
     const uniq_file_name = uuid();
-    const filename = `${uniq_file_name}.${ext}`;
+    const filename = `${uniq_file_name}.${handler.extension}`;
     const filepath = path.join(dir_path, filename);
 
     // Write code to the file
@@ -40,3 +26,4 @@ const getfilepath = (language, code) => {
 };
 
 export default getfilepath;
+

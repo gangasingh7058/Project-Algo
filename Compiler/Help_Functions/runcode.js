@@ -1,10 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import { spawn, exec as rawExec } from 'child_process';
+import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
-import { promisify } from 'util';
-
-const exec = promisify(rawExec);
+import { languageRegistry } from '../languages/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,33 +14,20 @@ if (!fs.existsSync(out_path)) {
 
 const TIME_LIMIT_MS = 3000;
 
-const getPythonCmd = () => {
-  if (process.env.PYTHON_CMD) return process.env.PYTHON_CMD;
-  return process.platform === 'win32' ? 'python' : 'python3';
-};
-
 const runcode = async (filepath, input_path, mode, language) => {
   const ext = path.extname(filepath).toLowerCase();
-  const lang = (language || '').toLowerCase();
-  const isPython = ['.py', '.python', '.py3'].includes(ext) || ['python', 'py', 'py3', 'python3'].includes(lang);
-  let out_file_path = null;
+  let createdFiles = [];
 
   try {
-    let child;
-    if (isPython) {
-      const pythonCmd = getPythonCmd();
-      await exec(`"${pythonCmd}" -m py_compile "${filepath}"`);
-      child = spawn(pythonCmd, ['-B', filepath], {
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
-    } else {
-      const output_name = path.basename(filepath).split('.')[0];
-      out_file_path = path.join(out_path, `${output_name}.exe`);
-      await exec(`g++ "${filepath}" -o "${out_file_path}"`);
-      child = spawn(out_file_path, {
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
+    const handler = languageRegistry.getHandler(language || ext);
+    const { command, args, createdFiles: langCreatedFiles } = await handler.prepare(filepath, out_path);
+    if (langCreatedFiles) {
+      createdFiles = langCreatedFiles;
     }
+
+    const child = spawn(command, args || [], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
 
     return await new Promise((resolve) => {
       let input = '';
@@ -109,18 +94,24 @@ const runcode = async (filepath, input_path, mode, language) => {
       error: errorDetails,
     };
   } finally {
-    if (mode === 'compiler') {
-      try { fs.rmSync(filepath, { force: true }); } catch {}
-      if (out_file_path) {
-        try { fs.rmSync(out_file_path, { force: true }); } catch {}
+    try { fs.rmSync(filepath, { force: true }); } catch {}
+    for (const file of createdFiles) {
+      if (file) {
+        try { fs.rmSync(file, { recursive: true, force: true }); } catch {}
       }
-      try {
-        if (input_path && fs.existsSync(input_path)) {
-          fs.rmSync(input_path, { force: true });
-        }
-      } catch {}
     }
+    const parentDir = path.dirname(filepath);
+    const codesPath = path.join(__dirname, 'codes');
+    if (parentDir !== codesPath && parentDir.startsWith(codesPath)) {
+      try { fs.rmSync(parentDir, { recursive: true, force: true }); } catch {}
+    }
+    try {
+      if (input_path && fs.existsSync(input_path)) {
+        fs.rmSync(input_path, { force: true });
+      }
+    } catch {}
   }
 };
 
 export default runcode;
+
