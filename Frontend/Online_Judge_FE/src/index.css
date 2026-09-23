@@ -17,3 +17,55 @@
   filter: brightness(1.2);
 }
 
+
+
+/* Toast countdown bar */
+@keyframes toast-progress {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+.toast-progress {
+  transform-origin: left;
+  animation-name: toast-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+
+/* Retro-themed scrollbars (problem panel, editor column, console boxes, modals, page) */
+* {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #a855f7 rgba(0, 0, 0, 0.4);
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.45);
+  border-left: 1px solid rgba(168, 85, 247, 0.25);
+  border-radius: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #a855f7, #22d3ee);
+  border: 2px solid rgba(0, 0, 0, 0.6);
+  border-radius: 8px;
+  box-shadow: 0 0 6px rgba(34, 211, 238, 0.5);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #c084fc, #67e8f9);
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.8);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Console input/output textarea: themed resize handle */
+textarea::-webkit-resizer {
+  background: transparent;
+}

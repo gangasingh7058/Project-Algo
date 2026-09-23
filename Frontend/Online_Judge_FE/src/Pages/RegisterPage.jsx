@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Gamepad2, Zap, Star, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import toast from '../Helping Functions/toast';
 
 const RegisterPage = () => {
 
@@ -33,7 +34,7 @@ const RegisterPage = () => {
 
             // User Register Fails
             if (response.data.success === false) {
-              alert(response.data.msg || response.data.error || response.data.err || "Registration failed");
+              toast.error(response.data.msg || response.data.error || response.data.err || "Registration failed");
             } else {
               // User SignIn Success
               localStorage.setItem('token', `bearer: ${response.data.jwt_token}`);
@@ -44,7 +45,7 @@ const RegisterPage = () => {
         } catch (error) {
             console.error("Error during register:", error);
             const errMsg = error.response?.data?.msg || error.response?.data?.error || error.response?.data?.err || error.message || "Something went wrong. Please try again.";
-            alert(errMsg);
+            toast.error(errMsg);
         }
         finally{
             setIsLoading(false);

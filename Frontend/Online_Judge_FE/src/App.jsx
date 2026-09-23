@@ -8,6 +8,7 @@ import ProblemSolvePage from './Pages/ProblemSolve';
 import SubmissionsPage from './Pages/SubmissionPage';
 import { useNavigate } from 'react-router-dom';
 import PersonalBrandingComponent from './Components/personal_branding';
+import Toaster from './Components/Toaster';
 import './App.css'
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
         <Route path='/user/submissions' element={<SubmissionsPage />} />
       </Routes>
       <PersonalBrandingComponent />
+      <Toaster />
     </Router>
   );
 }

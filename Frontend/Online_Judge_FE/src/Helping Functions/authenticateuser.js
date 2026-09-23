@@ -1,5 +1,6 @@
 import getusertoken from "./getusertoken";
 import { useNavigate } from "react-router-dom";
+import toast from './toast';
 
 const authenticateuser=()=>{
 
@@ -7,7 +8,7 @@ const authenticateuser=()=>{
     const token=getusertoken();
 
     if(!token){
-        alert("Please Sign In");
+        toast.warning("Please Sign In");
         navigate('/user/signin');
         return false;
     }

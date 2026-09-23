@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import toast from '../Helping Functions/toast';
 
 const ProblemsPanel = ({ problemssolved = [] }) => {
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ const ProblemsPanel = ({ problemssolved = [] }) => {
         }
         setproblem(Array.isArray(problemlist.data.problems) ? problemlist.data.problems : []);
       } catch (error) {
-        alert("Error Fetching Problem List");
+        toast.error("Error Fetching Problem List");
       }
     };
 

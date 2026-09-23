@@ -7,6 +7,7 @@ import getusertoken from "../Helping Functions/getusertoken";
 import { useEffect } from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from '../Helping Functions/toast';
 // import dotenv from 'dotenv'
 
 const HomePage =() => {
@@ -44,7 +45,7 @@ const HomePage =() => {
 
             setuserdetails(response.data);
           } catch (error) {
-            alert("Error Fetching User Details");
+            toast.error("Error Fetching User Details");
             console.error(error);
           }
         };

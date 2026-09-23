@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Editor from '@monaco-editor/react';
 import axios from 'axios';
 import RetroNavbar from '../Components/Navbar';
+import toast from '../Helping Functions/toast';
 
 const COMPILER_TEMPLATES = {
   cpp: `#include <iostream>\nusing namespace std;\n\nint main() {\n    int a, b;\n    if (cin >> a >> b) {\n        cout << a + b;\n    }\n    return 0;\n}`,
@@ -34,7 +35,7 @@ const CompilerPage = () => {
       inputs.trim() === '';
 
     if (requiresInput) {
-      alert("Inputs Required for Given Code");
+      toast.warning("Inputs Required for Given Code");
       return;
     }
 

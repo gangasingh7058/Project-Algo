@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import getusertoken from "../Helping Functions/getusertoken";
 import PastsubmissionModule from "./pastSubmissionmodule";
 import { CheckCircle } from 'lucide-react';
+import toast from '../Helping Functions/toast';
 
 const Problem_Solve_Layout = ({ problemId }) => {
 
@@ -41,7 +42,7 @@ const Problem_Solve_Layout = ({ problemId }) => {
         }
       } catch (error) {
         // console.log(error);\
-        alert("Error Fetching Past Submission Data");
+        toast.error("Error Fetching Past Submission Data");
       }
     };
 
@@ -67,7 +68,7 @@ const Problem_Solve_Layout = ({ problemId }) => {
         setgotproblem(true);
       } catch (error) {
         // console.log(error);
-        alert("Error Fetching Problem Details");
+        toast.error("Error Fetching Problem Details");
         setgotproblem(false);
       }
     };
