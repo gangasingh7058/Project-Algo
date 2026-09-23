@@ -1,4 +1,4 @@
-import { Kafka, Partitioners } from 'kafkajs';
+import { Kafka, Partitioners, logLevel } from 'kafkajs';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 
@@ -6,26 +6,42 @@ dotenv.config();
 
 process.env.KAFKAJS_NO_PARTITIONER_WARNING = '1';
 
-const kafkaHost = process.env.KAFKA_BROKER || 'localhost:9092';
+// Kafka is optional: only enabled when KAFKA_BROKER is set. Otherwise (or if the
+// broker is unreachable) executeCodeViaKafka rejects immediately and callers
+// fall back to calling the compiler over HTTP.
+const kafkaHost = process.env.KAFKA_BROKER;
+const kafkaEnabled = !!kafkaHost;
 
-const kafka = new Kafka({
-  clientId: 'codearcade-backend',
-  brokers: [kafkaHost],
-  retry: {
-    initialRetryTime: 500,
-    retries: 15
-  }
-});
+const kafka = kafkaEnabled
+  ? new Kafka({
+      clientId: 'codearcade-backend',
+      brokers: [kafkaHost],
+      logLevel: logLevel.NOTHING, // we log our own concise messages; kafkajs is very noisy when the broker is down
+      connectionTimeout: 3000,
+      retry: {
+        initialRetryTime: 500,
+        retries: 2
+      }
+    })
+  : null;
 
-const producer = kafka.producer({
+const producer = kafka && kafka.producer({
   createPartitioner: Partitioners.LegacyPartitioner
 });
-const consumer = kafka.consumer({ groupId: 'backend-group' });
-const admin = kafka.admin();
+const consumer = kafka && kafka.consumer({ groupId: 'backend-group' });
+const admin = kafka && kafka.admin();
+
+if (kafka) {
+  const markDown = () => { isConnected = false; };
+  producer.on(producer.events.DISCONNECT, markDown);
+  consumer.on(consumer.events.DISCONNECT, markDown);
+  consumer.on(consumer.events.CRASH, markDown);
+}
 
 const pendingJobs = new Map();
 
 let isConnected = false;
+let initializing = null;
 
 async function ensureTopicsExist() {
   try {
@@ -43,8 +59,19 @@ async function ensureTopicsExist() {
   }
 }
 
-export async function initKafka(retriesLeft = 10, delay = 2000) {
-  if (isConnected) return;
+export function initKafka(retriesLeft = 2, delay = 2000) {
+  if (!kafkaEnabled) {
+    console.log('KAFKA_BROKER not set, running without Kafka (direct HTTP compiler mode)');
+    return Promise.resolve();
+  }
+  if (isConnected) return Promise.resolve();
+  if (!initializing) {
+    initializing = connectKafka(retriesLeft, delay).finally(() => { initializing = null; });
+  }
+  return initializing;
+}
+
+async function connectKafka(retriesLeft, delay) {
   try {
     await ensureTopicsExist();
 
@@ -78,9 +105,9 @@ export async function initKafka(retriesLeft = 10, delay = 2000) {
     if (retriesLeft > 0) {
       console.log(`[Backend Kafka] Connecting to broker... retrying in ${delay / 1000}s (${retriesLeft} retries left)`);
       await new Promise(res => setTimeout(res, delay));
-      return initKafka(retriesLeft - 1, delay);
+      return connectKafka(retriesLeft - 1, delay);
     }
-    console.error('Error connecting Kafka in Backend:', error.message);
+    console.warn('Kafka unavailable, falling back to direct HTTP compiler mode:', error.message);
   }
 }
 
@@ -90,8 +117,13 @@ export async function initKafka(retriesLeft = 10, delay = 2000) {
 export function executeCodeViaKafka(jobPayload, timeoutMs = 20000) {
   return new Promise(async (resolve, reject) => {
     try {
+      if (!kafkaEnabled) {
+        return reject(new Error('Kafka is not configured'));
+      }
       if (!isConnected) {
-        await initKafka();
+        // don't block the request on a dead broker; retry connecting in the background
+        initKafka().catch(() => {});
+        return reject(new Error('Kafka is not connected'));
       }
 
       const jobId = crypto.randomUUID();
@@ -106,10 +138,16 @@ export function executeCodeViaKafka(jobPayload, timeoutMs = 20000) {
 
       pendingJobs.set(jobId, { resolve, reject, timer });
 
-      await producer.send({
-        topic: 'code-execution',
-        messages: [{ key: jobId, value: JSON.stringify(payload) }],
-      });
+      try {
+        await producer.send({
+          topic: 'code-execution',
+          messages: [{ key: jobId, value: JSON.stringify(payload) }],
+        });
+      } catch (sendErr) {
+        clearTimeout(timer);
+        pendingJobs.delete(jobId);
+        throw sendErr;
+      }
     } catch (err) {
       reject(err);
     }

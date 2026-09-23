@@ -1,0 +1,38 @@
+name: Deploy to Render
+
+# Manual trigger. Render pulls the latest image from Docker Hub (built by the
+# "Build and Push Docker Images" workflow), same idea as the EC2 deployment.
+# Each service lives in a different Render account, so each has its own hook.
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "What to deploy"
+        type: choice
+        default: all
+        options:
+          - all
+          - backend
+          - compiler
+          - mcp
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [backend, compiler, mcp]
+    steps:
+      - name: Trigger Render deploy (${{ matrix.service }})
+        if: inputs.service == 'all' || inputs.service == matrix.service
+        env:
+          HOOK: ${{ secrets[format('RENDER_DEPLOY_HOOK_{0}', matrix.service)] }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::error::Missing secret RENDER_DEPLOY_HOOK_${{ matrix.service }}"
+            exit 1
+          fi
+          # No imgURL: Render re-pulls the image tag configured on the service (latest)
+          curl -fsS --retry 3 "$HOOK"
+          echo

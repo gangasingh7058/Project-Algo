@@ -8,7 +8,7 @@ import { createMcpServer } from "./mcp_server.js";
 
 dotenv.config();
 
-const PORT = parseInt(process.env.MCP_PORT || "3003", 10);
+const PORT = parseInt(process.env.PORT || process.env.MCP_PORT || "3003", 10);
 
 
 

@@ -1,4 +1,4 @@
-import { Kafka, Partitioners } from 'kafkajs';
+import { Kafka, Partitioners, logLevel } from 'kafkajs';
 import dotenv from 'dotenv';
 import getfilepath from '../Help_Functions/getfilepath.js';
 import runcode from '../Help_Functions/runcode.js';
@@ -8,22 +8,28 @@ dotenv.config();
 
 process.env.KAFKAJS_NO_PARTITIONER_WARNING = '1';
 
-const kafkaHost = process.env.KAFKA_BROKER || 'localhost:9092';
+// Kafka is optional: only enabled when KAFKA_BROKER is set; the HTTP /run endpoint always works.
+const kafkaHost = process.env.KAFKA_BROKER;
+const kafkaEnabled = !!kafkaHost;
 
-const kafka = new Kafka({
-  clientId: 'codearcade-compiler',
-  brokers: [kafkaHost],
-  retry: {
-    initialRetryTime: 500,
-    retries: 15
-  }
-});
+const kafka = kafkaEnabled
+  ? new Kafka({
+      clientId: 'codearcade-compiler',
+      brokers: [kafkaHost],
+      logLevel: logLevel.NOTHING, // we log our own concise messages; kafkajs is very noisy when the broker is down
+      connectionTimeout: 3000,
+      retry: {
+        initialRetryTime: 500,
+        retries: 2
+      }
+    })
+  : null;
 
-const consumer = kafka.consumer({ groupId: 'compiler-group' });
-const producer = kafka.producer({
+const consumer = kafka && kafka.consumer({ groupId: 'compiler-group' });
+const producer = kafka && kafka.producer({
   createPartitioner: Partitioners.LegacyPartitioner
 });
-const admin = kafka.admin();
+const admin = kafka && kafka.admin();
 
 let isRunning = false;
 
@@ -43,7 +49,11 @@ async function ensureTopicsExist() {
   }
 }
 
-export async function startKafkaConsumer(retriesLeft = 10, delay = 2000) {
+export async function startKafkaConsumer(retriesLeft = 2, delay = 2000) {
+  if (!kafkaEnabled) {
+    console.log('KAFKA_BROKER not set, Kafka consumer disabled (HTTP /run only)');
+    return;
+  }
   if (isRunning) return;
 
   try {
@@ -133,7 +143,7 @@ export async function startKafkaConsumer(retriesLeft = 10, delay = 2000) {
       await new Promise(res => setTimeout(res, delay));
       return startKafkaConsumer(retriesLeft - 1, delay);
     }
-    console.error('Error starting Kafka consumer in Compiler:', error.message);
+    console.warn('Kafka unavailable, compiler will serve HTTP /run only:', error.message);
   }
 }
 
