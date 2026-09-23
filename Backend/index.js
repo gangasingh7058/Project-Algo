@@ -21,6 +21,15 @@ app.get('/', (req, res) => {
 
   res.send("<h1>HELLO FROM CODEARENA SERVER</h1>")
 })
+
+app.get('/health',(req,res)=>{
+
+  res.json({
+    success:true,
+    service:"Healthy"
+  })
+})
+
 app.use('/new/user', userauthroute);
 app.use('/user', userProfileroute)
 app.use('/api', problemsroute);
