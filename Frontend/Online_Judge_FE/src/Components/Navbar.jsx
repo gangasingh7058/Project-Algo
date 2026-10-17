@@ -3,9 +3,10 @@ import { Code2, LogOut, Menu, X } from "lucide-react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import getusertoken from "../Helping Functions/getusertoken";
+import { checkAdmin } from "../Helping Functions/admin";
 import { snappy } from "../Helping Functions/motion";
 
-const Options = [
+const BASE_OPTIONS = [
   { name: "Problems", route: "/home" },
   { name: "Compiler", route: "/compiler" },
   { name: "Submissions", route: "/user/submissions" },
@@ -30,6 +31,15 @@ const RetroNavbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [token, settoken] = useState(() => getusertoken());
   const [scrolled, setScrolled] = useState(false);
+  const [admin, setAdmin] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    checkAdmin().then((ok) => alive && setAdmin(ok));
+    return () => { alive = false; };
+  }, [token]);
+
+  const Options = admin ? [...BASE_OPTIONS, { name: "Admin", route: "/admin" }] : BASE_OPTIONS;
 
   // Scroll edge effect: the divider only appears once content slides under the bar
   useEffect(() => {
