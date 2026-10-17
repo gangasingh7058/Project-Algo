@@ -1,18 +1,1 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
-body {
-  font-family: 'Press Start 2P', monospace;
-}
-
-.scan-lines {
-  background: repeating-linear-gradient(
-    to bottom,
-    rgba(0, 255, 255, 0.05),
-    rgba(0, 255, 255, 0.05) 1px,
-    transparent 1px,
-    transparent 3px
-  );
-  height: 100%;
-  width: 100%;
-  pointer-events: none;
-}
+/* All styling lives in index.css (design tokens + components). */

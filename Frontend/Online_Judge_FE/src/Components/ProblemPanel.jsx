@@ -1,110 +1,94 @@
- 
+import { CheckCircle2, ChevronRight, Circle, SearchX } from "lucide-react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { DifficultyBadge, Skeleton, Tag } from "./ui";
+import { spring } from "../Helping Functions/motion";
 
-import { Code2, CheckCircle, XCircle } from "lucide-react";
-import axios from 'axios';
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import toast from '../Helping Functions/toast';
+const tagName = (t) => (t.tag ? t.tag.tagName : t.tagName);
+const tagKey = (t) => (t.tag ? t.tag.id : t.tagId);
 
-const ProblemsPanel = ({ problemssolved = [] }) => {
-  const navigate = useNavigate();
-  const [problems, setproblem] = useState([]);
-
-   // Convert solved list to Set of pids for quick lookup
-  const solvedSet = new Set((problemssolved || []).map(p => p?.problemId));
-
-  useEffect(() => {
-    const getProblems = async () => {
-      try {
-        const problemlist = await axios.get(`${import.meta.env.VITE_BACKEND_PORT}/api/problems`);
-        if (problemlist.data.success === false) {
-          throw new Error("Problem fetch failed");
-        }
-        setproblem(Array.isArray(problemlist.data.problems) ? problemlist.data.problems : []);
-      } catch (error) {
-        toast.error("Error Fetching Problem List");
-      }
-    };
-
-    getProblems();
-  }, []);
-
-  const getDifficultyColor = (difficulty) => {
-    switch (difficulty) {
-      case "Easy": return "text-green-400";
-      case "Medium": return "text-yellow-400";
-      case "Hard": return "text-red-400";
-      default: return "text-gray-400";
-    }
-  };
+const ProblemsPanel = ({ problems = [], state = "ready", problemssolved = [] }) => {
+  // Convert solved list to Set of pids for quick lookup
+  const solvedSet = new Set((problemssolved || []).map((p) => p?.problemId));
 
   return (
-    <div className="bg-black/40 backdrop-blur-sm border-2 border-cyan-400/50 rounded-lg p-6 shadow-lg">
-      {/* Header */}
-      <div className="flex items-center mb-4 space-x-2 text-cyan-400 font-mono uppercase tracking-wider text-lg">
-        <Code2 className="w-6 h-6" />
-        <span>Problem Set</span>
+    <section className="card overflow-hidden" aria-labelledby="problems-heading">
+      <div className="flex items-center justify-between px-5 py-4 sm:px-6">
+        <h2 id="problems-heading" className="title text-lg">Problems</h2>
+        {state === "ready" && (
+          <span className="text-[0.8125rem] text-label-3 tabular-nums">
+            {problems.length} {problems.length === 1 ? "problem" : "problems"}
+          </span>
+        )}
       </div>
 
-      {/* Problem List */}
-      <div className="space-y-3">
-        <AnimatePresence>
-          {(Array.isArray(problems) ? problems : []).map((problem) => {
+      {state === "loading" && (
+        <ul className="divide-y divide-hairline border-t border-hairline">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <li key={i} className="flex items-center gap-4 px-5 py-4 sm:px-6">
+              <Skeleton className="h-5 w-5 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-2/5" />
+                <Skeleton className="h-3 w-1/4" />
+              </div>
+              <Skeleton className="h-6 w-16 rounded-full" />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {state === "error" && (
+        <div className="flex flex-col items-center gap-2 border-t border-hairline px-6 py-16 text-center">
+          <SearchX className="text-label-3" size={28} />
+          <p className="font-medium">Couldn't load problems</p>
+          <p className="text-sm text-label-2">Check your connection and refresh the page.</p>
+        </div>
+      )}
+
+      {state === "ready" && (
+        <ul className="divide-y divide-hairline border-t border-hairline">
+          {problems.map((problem, i) => {
             const isSolved = solvedSet.has(problem.id);
-
             return (
-              <motion.div
+              <motion.li
                 key={problem.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 1, ease: "easeOut" }}
-                className={`${
-                  isSolved ? "bg-green-500/30" : "bg-black/30"
-                } border border-purple-500/30 rounded-lg py-4 px-6 hover:border-purple-400/50 transition-colors`}
+                transition={{ ...spring, delay: Math.min(i, 10) * 0.03 }}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-3">
-                    {isSolved ? (
-                      <CheckCircle className="w-5 h-5 text-green-400" />
-                    ) : (
-                      <XCircle className="w-5 h-5 text-gray-500" />
+                <Link
+                  to={`/home/problem/${problem.id}`}
+                  className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-fill focus-visible:bg-fill focus-visible:outline-none active:bg-fill-2 sm:px-6"
+                >
+                  {isSolved ? (
+                    <CheckCircle2 className="shrink-0 text-success" size={20} aria-label="Solved" />
+                  ) : (
+                    <Circle className="shrink-0 text-label-3" size={20} aria-label="Not solved" />
+                  )}
+
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-[1.0625rem] font-medium tracking-[-0.012em]">{problem.title}</h3>
+                    {(problem.tags || []).length > 0 && (
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {problem.tags.map((t) => (
+                          <Tag key={tagKey(t)}>{tagName(t)}</Tag>
+                        ))}
+                      </div>
                     )}
-                    <h3 className="text-white text-2xl font-mono font-bold">{problem.title}</h3>
-                  </div>
-                  <span className={`font-mono font-bold ${getDifficultyColor(problem.difficulty)} text-xl`}>
-                    {problem.difficulty}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4 flex-wrap">
-                    <div className="flex flex-wrap gap-2">
-                      {(problem.tags || []).map((tagobj) => (
-                        <span
-                          key={tagobj.tag ? tagobj.tag.id : tagobj.tagId}
-                          className="px-2 py-1 bg-purple-600/30 text-purple-300 rounded text-xs font-mono"
-                        >
-                          {tagobj.tag ? tagobj.tag.tagName : tagobj.tagName}
-                        </span>
-                      ))}
-                    </div>
                   </div>
 
-                  <button 
-                    className="bg-cyan-600/80 hover:bg-cyan-500 text-black border border-cyan-400 font-mono uppercase text-xs px-3 py-1 rounded transition-all"
-                    onClick={() => navigate(`/home/problem/${problem.id}`)}
-                  >
-                    Solve
-                  </button>
-                </div>
-              </motion.div>
+                  <DifficultyBadge level={problem.difficulty} />
+                  <ChevronRight
+                    size={18}
+                    className="shrink-0 text-label-3 transition-transform duration-200 group-hover:translate-x-0.5"
+                  />
+                </Link>
+              </motion.li>
             );
           })}
-        </AnimatePresence>
-      </div>
-    </div>
+        </ul>
+      )}
+    </section>
   );
 };
 

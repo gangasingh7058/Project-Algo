@@ -1,88 +1,92 @@
 import ProblemsPanel from "../Components/ProblemPanel";
 import UserStatsPanel from "../Components/UserPanel";
 import ContestsPanel from "../Components/ContestPanel";
-import RetroNavbar from "../Components/Navbar";
+import { Page, PageHeader } from "../Components/ui";
 import axios from "axios";
 import getusertoken from "../Helping Functions/getusertoken";
-import { useEffect } from "react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import toast from '../Helping Functions/toast';
-// import dotenv from 'dotenv'
 
-const HomePage =() => {
+const greeting = () => {
+  const h = new Date().getHours();
+  return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+};
 
-    // dotenv.config();
+const HomePage = () => {
+  const [userdetails, setuserdetails] = useState(null);
+  const [profileDone, setProfileDone] = useState(false);
+  const [signedIn] = useState(() => !!getusertoken());
+  const [problems, setProblems] = useState([]);
+  const [problemsState, setProblemsState] = useState("loading"); // loading | ready | error
 
-    const navigate=useNavigate();
-    
+  useEffect(() => {
+    const getuserdetails = async () => {
+      const token = getusertoken();
+      if (!token) return;
 
-    const [userdetails,setuserdetails]=useState(null);
-    const [verifieluser,setverifieduser]=useState(false);
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_PORT}/user/profile`, {
+          headers: { usertoken: token },
+        });
+        if (response.data.success === false) {
+          throw new Error(response.data.message);
+        }
+        setuserdetails(response.data);
+      } catch (error) {
+        toast.error("Error Fetching User Details");
+        console.error(error);
+      } finally {
+        setProfileDone(true);
+      }
+    };
 
-    useEffect(() => {
-        const getuserdetails = async () => {
-          const token = getusertoken();
-          if (!token) {
-            setverifieduser(false);
-            return;
-          }
+    const getProblems = async () => {
+      try {
+        const problemlist = await axios.get(`${import.meta.env.VITE_BACKEND_PORT}/api/problems`);
+        if (problemlist.data.success === false) {
+          throw new Error("Problem fetch failed");
+        }
+        setProblems(Array.isArray(problemlist.data.problems) ? problemlist.data.problems : []);
+        setProblemsState("ready");
+      } catch {
+        setProblemsState("error");
+        toast.error("Error Fetching Problem List");
+      }
+    };
 
-          setverifieduser(true);
+    getuserdetails();
+    getProblems();
+  }, []);
 
-          try {
-            console.log("USER");
-            
-            const response = await axios.get(`${import.meta.env.VITE_BACKEND_PORT}/user/profile`, {
-              headers: {
-                usertoken: token
-              }
-            });
-
-            if (response.data.success === false) {
-              throw new Error(response.data.message);
-            }
-
-            setuserdetails(response.data);
-          } catch (error) {
-            toast.error("Error Fetching User Details");
-            console.error(error);
-          }
-        };
-
-        getuserdetails();
-      }, []);
-
+  const user = userdetails?.user;
+  const solved = user?.solved || [];
 
   return (
-    <div className="min-h-screen bg-[url('/retro-home-bg.jpg')] bg-cover bg-no-repeat bg-center bg-fixed relative overflow-hidden flex flex-col">
-      
+    <Page className="pb-16">
+      <PageHeader
+        eyebrow={user?.firstname ? `${greeting()}, ${user.firstname}` : "Problem set"}
+        title="Sharpen your skills."
+        subtitle="Pick a problem, write a solution, and run it against real test cases in seconds."
+      />
 
-      {/* Main content */}
-      <div className="relative z-10">
-        <RetroNavbar />
-
-        <div className="container mx-auto px-4 py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left column - Contests and Problems */}
-            <div className="lg:col-span-2 space-y-6">
-              <ContestsPanel />
-              <ProblemsPanel problemssolved={userdetails?.user?.solved || []} />
-            </div>
-
-            {/* Right column - User Stats */}
-            <div className="lg:col-span-1">
-              <UserStatsPanel firstname={userdetails?.user?.firstname || null} lastname={userdetails?.user?.lastname || null} solvecount={userdetails?.user?.solved?.length || 0} />
-            </div>
-          </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="min-w-0 lg:col-span-2">
+          <ProblemsPanel problems={problems} state={problemsState} problemssolved={solved} />
         </div>
-      </div>
 
-      {/* Optional scan lines effect */}
-      <div className="absolute inset-0 pointer-events-none z-20">
-        <div className="scan-lines"></div>
+        <aside className="min-w-0 space-y-6 lg:sticky lg:top-20 lg:self-start">
+          <UserStatsPanel
+            signedIn={signedIn}
+            loading={signedIn && !profileDone}
+            firstname={user?.firstname || null}
+            lastname={user?.lastname || null}
+            solved={solved}
+            problems={problems}
+          />
+          <ContestsPanel />
+        </aside>
       </div>
-    </div>
+    </Page>
   );
 };
 

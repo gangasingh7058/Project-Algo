@@ -1,21 +1,25 @@
 import { useEffect, useState } from "react";
-import Editor from "@monaco-editor/react";
-import { CheckCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import { History, WifiOff } from "lucide-react";
 import axios from "axios";
-import RetroNavbar from "../Components/Navbar";
-import { useNavigate } from "react-router-dom";
 import getusertoken from "../Helping Functions/getusertoken";
-import { motion, AnimatePresence } from "framer-motion";
+import { Page, PageHeader, Skeleton } from "../Components/ui";
+import SubmissionRow from "../Components/SubmissionRow";
+
+const Empty = ({ Icon, title, body, action }) => (
+  <div className="card flex flex-col items-center gap-2 px-6 py-20 text-center">
+    <Icon size={28} className="text-label-3" />
+    <p className="title mt-1 text-lg">{title}</p>
+    <p className="max-w-sm text-[0.9375rem] text-label-2">{body}</p>
+    {action}
+  </div>
+);
 
 const SubmissionsPage = () => {
-
-
   const [expandedIndex, setExpandedIndex] = useState(null);
   const [pastSubmissions, setPastSubmissions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [token,settoken]=useState(null);
-
-  const navigate = useNavigate();
+  const [state, setState] = useState("loading"); // loading | ready | signedout | error
+  const [token] = useState(() => getusertoken());
 
   const toggleExpand = (index) => {
     setExpandedIndex(index === expandedIndex ? null : index);
@@ -23,120 +27,97 @@ const SubmissionsPage = () => {
 
   useEffect(() => {
     const getSubmissions = async () => {
-     await settoken(getusertoken());
-      const temptoken=getusertoken();
-      if (!temptoken) {
-        // alert("Unknown User");
-        // navigate("/user/signin");
-        setLoading(false);
+      if (!token) {
+        setState("signedout");
         return;
       }
-      
+
       try {
         const response = await axios.get(`${import.meta.env.VITE_BACKEND_PORT}/user/submission`, {
-          headers: { usertoken: temptoken },
+          headers: { usertoken: token },
         });
-
-        // console.log(response.data);
-        
         if (response.data.success) {
-          setPastSubmissions(response.data.solved);
+          setPastSubmissions(response.data.solved || []);
+          setState("ready");
         } else {
-          // console.log(response.data.message);
+          setState("error");
         }
       } catch (error) {
         console.error("Error fetching submissions:", error);
-      } finally {
-        setLoading(false);
+        setState("error");
       }
     };
 
     getSubmissions();
-  }, []);
+  }, [token]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 font-mono text-white pb-10">
-      <RetroNavbar />
+    <Page className="pb-16">
+      <div className="mx-auto max-w-4xl">
+        <PageHeader
+          eyebrow="Your work"
+          title="Submissions"
+          subtitle="Every accepted solution you've submitted, with the code you wrote."
+        />
 
-      <div className="pt-6 relative z-10 px-6">
-        <h1 className="text-5xl font-bold text-cyan-400 text-center mb-8 drop-shadow-[0_0_10px_#22d3ee]">
-          Your Submissions
-        </h1>
-
-        {loading ? (
-          <div className="text-center text-cyan-300 text-xl mt-20">
-            Loading...
-          </div>
-        ) : pastSubmissions.length === 0 ? (
-          <div className="text-center text-cyan-300 text-xl mt-20">
-            {token?"No submissions yet.":"Login to see Submissions"}
-          </div>
-        ) : (
-          <div className="max-w-5xl mx-auto space-y-6">
-            {pastSubmissions.map((sub, index) => (
-              <div
-                key={index}
-                className="bg-black/30 rounded-xl border border-cyan-400/20 shadow-xl backdrop-blur-md transition-all"
-              >
-                {/* Header */}
-                <div
-                  onClick={() => toggleExpand(index)}
-                  className="flex justify-between items-center px-6 py-4 cursor-pointer hover:bg-black/40"
-                >
-                  <div>
-                    <div className="text-xl font-semibold text-white">
-                      {index+1}.{" "}
-                      {sub.problem.title}
-                    </div>
-                    <div className="text-sm text-cyan-300">
-                      {new Date(sub.date).toLocaleString()}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 text-cyan-400">
-                    <CheckCircle className="w-5 h-5" />
-                    <span className="text-sm font-medium">Solved</span>
-                  </div>
+        {state === "loading" && (
+          <div className="card divide-y divide-hairline overflow-hidden">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-6 py-5">
+                <Skeleton className="h-5 w-5 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-3 w-1/4" />
                 </div>
-
-                {/* Code Viewer */}
-                <AnimatePresence initial={false}>
-                    {expandedIndex === index && (
-                      <motion.div
-                        key="editor"
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.6 }}
-                        className="border-t border-cyan-400/10"
-                      >
-                        <Editor
-                          height="300px"
-                          language={
-                            sub.language ? (
-                              ['python', 'py', 'py3'].includes(sub.language.toLowerCase()) ? 'python' :
-                              ['javascript', 'js', 'node'].includes(sub.language.toLowerCase()) ? 'javascript' :
-                              ['java'].includes(sub.language.toLowerCase()) ? 'java' : 'cpp'
-                            ) : 'cpp'
-                          }
-                          value={sub.code}
-                          theme="vs-dark"
-                          options={{
-                            readOnly: true,
-                            fontSize: 16,
-                            minimap: { enabled: false },
-                            padding: { top: 10 },
-                          }}
-                        />
-                      </motion.div>
-                    )}
-                </AnimatePresence>
-
               </div>
             ))}
           </div>
         )}
+
+        {state === "signedout" && (
+          <Empty
+            Icon={History}
+            title="Sign in to see your submissions"
+            body="Your accepted solutions are saved to your account so you can revisit them any time."
+            action={<Link to="/user/signin" className="btn btn-primary mt-4">Sign in</Link>}
+          />
+        )}
+
+        {state === "error" && (
+          <Empty
+            Icon={WifiOff}
+            title="Couldn't load submissions"
+            body="Something went wrong reaching the server. Check your connection and try again."
+            action={<button onClick={() => window.location.reload()} className="btn btn-secondary mt-4">Try again</button>}
+          />
+        )}
+
+        {state === "ready" && pastSubmissions.length === 0 && (
+          <Empty
+            Icon={History}
+            title="No submissions yet"
+            body="Solve a problem and submit it — it will show up here."
+            action={<Link to="/home" className="btn btn-primary mt-4">Browse problems</Link>}
+          />
+        )}
+
+        {state === "ready" && pastSubmissions.length > 0 && (
+          <ul className="card overflow-hidden">
+            {pastSubmissions.map((sub, index) => (
+              <SubmissionRow
+                key={index}
+                title={sub.problem?.title || `Problem ${index + 1}`}
+                date={sub.date}
+                language={sub.language}
+                code={sub.code}
+                expanded={expandedIndex === index}
+                onToggle={() => toggleExpand(index)}
+              />
+            ))}
+          </ul>
+        )}
       </div>
-    </div>
+    </Page>
   );
 };
 

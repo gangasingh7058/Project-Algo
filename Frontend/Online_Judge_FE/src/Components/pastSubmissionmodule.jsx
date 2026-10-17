@@ -1,78 +1,45 @@
-import { useEffect, useState } from "react";
-import Editor from "@monaco-editor/react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { History } from "lucide-react";
 import getusertoken from "../Helping Functions/getusertoken";
-
+import SubmissionRow from "./SubmissionRow";
 
 const PastsubmissionModule = ({ pastSubmissions }) => {
   const [expandedIndex, setExpandedIndex] = useState(null);
-  const [token,setusertoken]=useState(null);
-
-
-  useEffect(()=>{
-
-
-    const checkusersignin=()=>{
-        setusertoken(getusertoken());
-    }
-
-    checkusersignin();
-  })
+  const [token] = useState(() => getusertoken());
 
   const toggleExpand = (index) => {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
-  return (
-    <div className="bg-black/40 backdrop-blur-sm border-2 border-cyan-400/50 rounded-lg p-4 max-h-[75vh] overflow-y-auto space-y-4">
-      {(!pastSubmissions || pastSubmissions.length === 0) ? (
-        <p className="text-center text-purple-300 font-mono">{token?"No past submissions found.":" Login to See Submissions "}</p>
-      ) : (
-        (pastSubmissions || []).map((submission, index) => (
-          <div
-            key={index}
-            className="border border-purple-500/30 rounded-md p-4 bg-black/30 shadow-md hover:bg-black/50 transition duration-200 cursor-pointer"
-            onClick={() => toggleExpand(index)}
-          >
-            <div className="w-full flex flex-col  sm:flex-row sm:justify-between sm:items-end">
-              <p className="font-semibold text-cyan-300 font-mono">Submission {index + 1}</p>
-              <p className="text-sm text-purple-300 font-mono">
-                {new Date(submission.date).toLocaleString()}
-              </p>
-            </div>
+  if (!pastSubmissions || pastSubmissions.length === 0) {
+    return (
+      <div className="flex flex-col items-center gap-2 py-16 text-center">
+        <History size={26} className="text-label-3" />
+        <p className="font-medium">{token ? "No submissions yet" : "Sign in to see your submissions"}</p>
+        <p className="text-sm text-label-2">
+          {token ? "Pass all test cases and submit to see your solution here." : "Your accepted solutions are saved to your account."}
+        </p>
+        {!token && <Link to="/user/signin" className="btn btn-primary btn-sm mt-3">Sign in</Link>}
+      </div>
+    );
+  }
 
-            <AnimatePresence initial={false}>
-                {expandedIndex === index && (
-                  <motion.div
-                      key="editor"
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.6 }}
-                      className="border-t border-cyan-400/10"
-                    >
-                      <div className="mt-4">
-                        <Editor
-                          height="300px"
-                          defaultLanguage="cpp"
-                          defaultValue={submission.code}
-                          theme="vs-dark"
-                          options={{
-                            readOnly: true,
-                            fontSize: 14,
-                            minimap: { enabled: false },
-                            scrollBeyondLastLine: false,
-                            wordWrap: "on",
-                          }}
-                        />
-                      </div>
-                  </motion.div>
-                )}
-            </AnimatePresence>
-          </div>
-        ))
-      )}
-    </div>
+  return (
+    <ul className="overflow-hidden rounded-2xl border border-hairline">
+      {pastSubmissions.map((submission, index) => (
+        <SubmissionRow
+          key={index}
+          title={`Submission ${index + 1}`}
+          date={submission.date}
+          language={submission.language}
+          code={submission.code}
+          expanded={expandedIndex === index}
+          onToggle={() => toggleExpand(index)}
+          compact
+        />
+      ))}
+    </ul>
   );
 };
 

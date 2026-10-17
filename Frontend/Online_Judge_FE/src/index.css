@@ -1,23 +1,253 @@
 @import "tailwindcss";
 
-/* src/index.css or styles.css */
-.retro-title-glow h1 {
-  text-shadow: 0 0 5px #0ff, 0 0 10px #f0f, 0 0 20px #0ff;
+/* ───────────────────────── Design tokens ─────────────────────────
+   Dark-first palette modelled on Apple's dark-mode system colors.
+   Every color, radius and easing used in the app comes from here. */
+@theme {
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", Inter, Roboto, "Helvetica Neue", sans-serif;
+  --font-display: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", Inter, Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  --color-canvas: #000000;
+  --color-surface: #1c1c1e;
+  --color-surface-2: #2c2c2e;
+  --color-surface-3: #3a3a3c;
+  --color-label: #f5f5f7;
+  --color-label-2: #a1a1a6;
+  --color-label-3: #6e6e73;
+  --color-hairline: rgb(255 255 255 / 0.09);
+  --color-fill: rgb(255 255 255 / 0.07);
+  --color-fill-2: rgb(255 255 255 / 0.11);
+
+  --color-accent: #0a84ff;
+  --color-accent-hover: #409cff;
+  --color-success: #30d158;
+  --color-warning: #ff9f0a;
+  --color-danger: #ff453a;
+  --color-hint: #ffd60a;
+  --color-ai: #bf5af2;
+
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-.retro-input-glow {
-  box-shadow: 0 0 6px 2px rgba(0, 255, 255, 0.2);
+:root {
+  color-scheme: dark;
 }
 
-.retro-card {
-  border-radius: 12px;
+html {
+  background: var(--color-canvas);
+  -webkit-text-size-adjust: 100%;
 }
 
-.retro-button:hover {
-  filter: brightness(1.2);
+body {
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-label);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.5;
+  letter-spacing: -0.006em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-optical-sizing: auto;
 }
 
+::selection {
+  background: rgb(10 132 255 / 0.4);
+}
 
+/* Soft ambient glow behind every page instead of photo backgrounds */
+.ambient {
+  background:
+    radial-gradient(60rem 30rem at 50% -12rem, rgb(10 132 255 / 0.16), transparent 70%),
+    radial-gradient(40rem 24rem at 90% 10%, rgb(191 90 242 / 0.08), transparent 70%),
+    var(--color-canvas);
+}
+
+@layer components {
+  /* Typography — tracking tightens as size grows, leading tightens too */
+  .display {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.028em;
+  }
+  .title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.018em;
+  }
+  .eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-label-3);
+  }
+
+  /* Materials */
+  .glass {
+    background: rgb(22 22 24 / 0.72);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    backdrop-filter: blur(24px) saturate(180%);
+  }
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-hairline);
+    border-radius: 1.25rem;
+  }
+
+  /* Buttons — feedback lives on the press, and it is instant */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    height: 2.5rem;
+    padding: 0 1.1rem;
+    border-radius: 999px;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: transform 120ms var(--ease-out-quart), background-color 160ms ease, color 160ms ease, opacity 160ms ease;
+  }
+  .btn:active:not(:disabled) {
+    transform: scale(0.96);
+    transition-duration: 60ms;
+  }
+  .btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .btn:focus-visible,
+  .focus-ring:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  .btn-sm {
+    height: 2rem;
+    padding: 0 0.85rem;
+    font-size: 0.8125rem;
+  }
+  .btn-lg {
+    height: 3rem;
+    padding: 0 1.5rem;
+    font-size: 1.0625rem;
+  }
+  .btn-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+  }
+  .btn-primary {
+    background: var(--color-accent);
+    color: #fff;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--color-accent-hover);
+  }
+  .btn-secondary {
+    background: var(--color-fill-2);
+    color: var(--color-label);
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background: rgb(255 255 255 / 0.16);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--color-label-2);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: var(--color-fill);
+    color: var(--color-label);
+  }
+
+  /* Form fields */
+  .field {
+    width: 100%;
+    height: 2.75rem;
+    padding: 0 0.9rem;
+    border-radius: 0.75rem;
+    background: var(--color-fill);
+    border: 1px solid transparent;
+    color: var(--color-label);
+    font-size: 1rem;
+    transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+  }
+  .field::placeholder {
+    color: var(--color-label-3);
+  }
+  .field:hover {
+    background: var(--color-fill-2);
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 4px rgb(10 132 255 / 0.22);
+  }
+  textarea.field {
+    height: auto;
+    padding: 0.75rem 0.9rem;
+    line-height: 1.55;
+  }
+  select.field {
+    appearance: none;
+    padding-right: 2.1rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a1a1a6' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.8rem center;
+    cursor: pointer;
+  }
+  select.field option {
+    background: var(--color-surface-2);
+  }
+  .field-sm {
+    height: 2rem;
+    border-radius: 0.6rem;
+    font-size: 0.8125rem;
+    padding-left: 0.7rem;
+  }
+  .label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-label-2);
+  }
+
+  /* Loading placeholder */
+  .skeleton {
+    border-radius: 0.5rem;
+    background: linear-gradient(90deg, var(--color-fill) 0%, var(--color-fill-2) 50%, var(--color-fill) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.6s ease-in-out infinite;
+  }
+
+  .kbd {
+    display: inline-flex;
+    align-items: center;
+    height: 1.25rem;
+    padding: 0 0.35rem;
+    border-radius: 0.3rem;
+    background: rgb(255 255 255 / 0.18);
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+}
+
+@keyframes shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
 
 /* Toast countdown bar */
 @keyframes toast-progress {
@@ -31,41 +261,58 @@
   animation-fill-mode: forwards;
 }
 
-
-/* Retro-themed scrollbars (problem panel, editor column, console boxes, modals, page) */
+/* Quiet, native-feeling scrollbars */
 * {
-  scrollbar-width: thin; /* Firefox */
-  scrollbar-color: #a855f7 rgba(0, 0, 0, 0.4);
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.18) transparent;
 }
-
 *::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
-
 *::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.45);
-  border-left: 1px solid rgba(168, 85, 247, 0.25);
-  border-radius: 8px;
+  background: transparent;
 }
-
 *::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #a855f7, #22d3ee);
-  border: 2px solid rgba(0, 0, 0, 0.6);
-  border-radius: 8px;
-  box-shadow: 0 0 6px rgba(34, 211, 238, 0.5);
+  background: rgb(255 255 255 / 0.16);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  border-radius: 999px;
 }
-
 *::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #c084fc, #67e8f9);
-  box-shadow: 0 0 10px rgba(34, 211, 238, 0.8);
+  background-color: rgb(255 255 255 / 0.28);
 }
 
-*::-webkit-scrollbar-corner {
-  background: transparent;
+/* ───────────── Accessibility preferences ───────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .btn:active:not(:disabled) {
+    transform: none;
+  }
 }
 
-/* Console input/output textarea: themed resize handle */
-textarea::-webkit-resizer {
-  background: transparent;
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    background: var(--color-surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --color-label-2: #d1d1d6;
+    --color-label-3: #aeaeb2;
+    --color-hairline: rgb(255 255 255 / 0.35);
+  }
+  .field {
+    border-color: rgb(255 255 255 / 0.35);
+  }
 }

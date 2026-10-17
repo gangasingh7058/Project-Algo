@@ -1,11 +1,14 @@
 import Editor from '@monaco-editor/react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import axios from 'axios';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Copy, FlaskConical, Keyboard, Lightbulb, Play, Send, Sparkles, Terminal, Trash2, Undo2, X } from 'lucide-react';
 import RunTestCasesResultModule from './RunTestCasesresultmodule';
 import getusertoken from '../Helping Functions/getusertoken';
 import toast from '../Helping Functions/toast';
-import { Copy, Keyboard, Terminal, Trash2 } from 'lucide-react';
-
+import { EditorSettings, ModKey, Segmented, Skeleton, Spinner } from './ui';
+import { snappy } from '../Helping Functions/motion';
+import { LANGUAGES, asComment, defineEditorThemes, editorOptions, toMonacoLanguage } from '../Helping Functions/editor';
 
 const CODE_TEMPLATES = {
   cpp: `#include<iostream>\nusing namespace std;\n\nint main(){\n cout<<"Hello World"<<endl;\n\nreturn 0;\n}`,
@@ -13,25 +16,28 @@ const CODE_TEMPLATES = {
   javascript: `console.log("Hello World");`
 };
 
-const ProblemSolveCodeArea = ( { problemId } ) => {
+const apiError = (error, fallback) =>
+  error.response?.data?.msg || error.response?.data?.err || error.response?.data?.error || error.message || fallback;
 
+const ProblemSolveCodeArea = ({ problemId }) => {
   const [code, setcode] = useState(CODE_TEMPLATES.cpp);
-  const [fontsize, setfontsize] = useState(16);
-  const [theme, settheme] = useState('vs-dark');
+  const [fontsize, setfontsize] = useState(15);
+  const [theme, settheme] = useState('midnight');
   const [codeinput, setcodeinput] = useState('');
-  const [codeoutput, setcodeoutput] = useState('Code Output Will appear here ...');
-  const [todisplay, settodisplay] = useState(codeoutput);
-  const [active, setactive] = useState('output');
+  const [codeoutput, setcodeoutput] = useState('');
+  const [outputFailed, setOutputFailed] = useState(false);
+  const [active, setactive] = useState('input');
   const [language, setlanguage] = useState('cpp');
   const [runloading, setrunloading] = useState(false);
-  const [runTestCaseloading,setrunTestcaseloading]=useState(false)
-  const [submitloading,setsubmitloading]=useState(false);
-  const [showresultmodule,setshowresultmodule]=useState(false);
-  const [runteastcaseresponse,setruntestcaseresponse]=useState(null);
-  const [askailoading,setaskailoading]=useState(false);
-  const [showaskai,setshowaskai]=useState(false);
-  const [gethintloading,setgethintloadinh]=useState(false);
-  const [gothint,setgothint]=useState(false);
+  const [runTestCaseloading, setrunTestcaseloading] = useState(false);
+  const [submitloading, setsubmitloading] = useState(false);
+  const [showresultmodule, setshowresultmodule] = useState(false);
+  const [runteastcaseresponse, setruntestcaseresponse] = useState(null);
+  const [askailoading, setaskailoading] = useState(false);
+  const [gethintloading, setgethintloadinh] = useState(false);
+  const [gothint, setgothint] = useState(false);
+  const [aiUndo, setAiUndo] = useState(null); // code as it was before the AI rewrote it
+  const runRef = useRef(null);
 
   const handleLanguageChange = (newLang) => {
     setlanguage(newLang);
@@ -42,30 +48,21 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
     }
   };
 
-  const handleOnChange = (e) => {
-    if (active == 'output') return;
-    setcodeinput(e.target.value);
-    settodisplay(e.target.value);
-  };
-
   const handleRun = async () => {
-    const requiresInput = 
-      (code.includes('cin') || code.includes('input()') || code.includes('readFileSync') || code.includes('Scanner')) && 
+    if (runloading) return;
+    const requiresInput =
+      (code.includes('cin') || code.includes('input()') || code.includes('readFileSync') || code.includes('Scanner')) &&
       codeinput.trim() === '';
 
     if (requiresInput) {
+      setactive('input');
       toast.warning('Inputs Required for Given Code');
       return;
     }
 
     setrunloading(true);
+    setactive('output');
     try {
-      const checkifworking=await axios.get(`${import.meta.env.VITE_COMPILER_PORT}/health`);
-      if(!checkifworking.data){
-        setcodeoutput("Compiler Not responding");
-        settodisplay("Compiler Not responding");
-        return ;
-      }
       const res = await axios.post(`${import.meta.env.VITE_COMPILER_PORT}/run`, {
         language: language,
         code: code,
@@ -75,303 +72,255 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
 
       if (res.data.success) {
         setcodeoutput(res.data.verdict);
-        settodisplay(res.data.verdict);
+        setOutputFailed(false);
       } else {
-        const errorMsg = res.data.error || res.data.err || "Compilation Error";
-        setcodeoutput(errorMsg);
-        settodisplay(errorMsg);
+        setcodeoutput(res.data.error || res.data.err || "Compilation Error");
+        setOutputFailed(true);
       }
     } catch (error) {
-      setcodeoutput('Server error');
+      setcodeoutput(error.response ? 'Server error' : 'Compiler not responding. It may be waking up — try again in a few seconds.');
+      setOutputFailed(true);
     } finally {
-      setactive('output');
       setrunloading(false);
     }
   };
+  runRef.current = handleRun;
 
-  const handleRunTest=async ()=>{
-
-        setrunTestcaseloading(true);
-
+  const handleRunTest = async () => {
+    setrunTestcaseloading(true);
     try {
-        
-        const response=await axios.post(`${import.meta.env.VITE_BACKEND_PORT}/evaluate/run/${problemId}`,{
-            code: code,
-            language: language
-        })
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_PORT}/evaluate/run/${problemId}`, {
+        code: code,
+        language: language
+      });
 
-
-        if (response.data.received && response.data.received.length > 1000) {
-              response.data.received = "Undefined";
-            }
-
-        setruntestcaseresponse(response.data);
-        // console.log(response.data);
-             
-
+      if (response.data.received && response.data.received.length > 1000) {
+        response.data.received = "Undefined";
+      }
+      setruntestcaseresponse(response.data);
     } catch (error) {
-        const errMsg = error.response?.data?.msg || error.response?.data?.err || error.response?.data?.error || error.message || "Some Error Occured While Running Test Cases";
-        toast.error(errMsg);
-    }finally {
-        setrunTestcaseloading(false)
-        setshowresultmodule(true);
-        setshowaskai(true);
+      toast.error(apiError(error, "Some Error Occured While Running Test Cases"));
+    } finally {
+      setrunTestcaseloading(false);
+      setshowresultmodule(true);
     }
+  };
 
-
-  }
-
-
-  const handleSubmit=async ()=>{
-
-    let token=getusertoken()
-    if(token==null){
-        toast.warning("SignIn To Submit");
-        return ;
+  const handleSubmit = async () => {
+    let token = getusertoken();
+    if (token == null) {
+      toast.warning("SignIn To Submit");
+      return;
     }
-    
-    token=token.split(" ")[1];
+    token = token.split(" ")[1];
 
-    if(runteastcaseresponse==null){
-        toast.warning("Run Test Cases First");
-        return;
+    if (runteastcaseresponse == null) {
+      toast.warning("Run Test Cases First");
+      return;
     }
-
-    if(runteastcaseresponse.success==false){
-        toast.warning("All Test Cases not passed");
-        return;
+    if (runteastcaseresponse.success == false) {
+      toast.warning("All Test Cases not passed");
+      return;
     }
-
-    
 
     setsubmitloading(true);
-
     try {
-        
-        const response=await axios.post(`${import.meta.env.VITE_BACKEND_PORT}/evaluate/submit/${problemId}`,{
-            code,
-            language,
-            usertoken:token
-        })
-
-        if(!response){
-            throw error;
-        }
-
-        // OutPut User
-        (response.data.success ? toast.success : toast.error)(response.data.msg);
-        
-
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_PORT}/evaluate/submit/${problemId}`, {
+        code,
+        language,
+        usertoken: token
+      });
+      (response.data.success ? toast.success : toast.error)(response.data.msg);
     } catch (error) {
-        const errMsg = error.response?.data?.msg || error.response?.data?.err || error.response?.data?.error || error.message || "Error Submitting";
-        toast.error(errMsg);
-    }finally {
-        setsubmitloading(false);
+      toast.error(apiError(error, "Error Submitting"));
+    } finally {
+      setsubmitloading(false);
     }
+  };
 
-  }
-
-  const handleAskAi=async ()=>{
- 
-    if(!runteastcaseresponse){
-      return toast.warning("Try Testcases First")
+  const handleAskAi = async () => {
+    if (!runteastcaseresponse) {
+      return toast.warning("Try Testcases First");
     }
-
-    if(runteastcaseresponse.success==true){
-      return toast.success("Your Code Already Passes All Test Cases")
+    if (runteastcaseresponse.success == true) {
+      return toast.success("Your Code Already Passes All Test Cases");
     }
 
     try {
-      
       setaskailoading(true);
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_PORT}/ai/find_error`, {
+        code,
+        pid: problemId
+      });
 
-      const response=await axios.post(`${import.meta.env.VITE_BACKEND_PORT}/ai/find_error`,{
-          code,
-          pid:problemId
-         })
-
-        // console.log(response.data);
-        
-      if(response.data.success==false){
-        toast.error(response.data.msg);
+      if (response.data.success == false || !response.data.res) {
+        toast.error(response.data.msg || "AI could not suggest a fix");
+        return;
       }
-
-      setcode(response.data.res)
-      
+      // Keep the user's version so the rewrite can be undone
+      setAiUndo(code);
+      setcode(response.data.res);
     } catch (error) {
-      const errMsg = error.response?.data?.msg || error.response?.data?.err || error.response?.data?.error || error.message || "Some Error Occured";
-      return toast.error(errMsg);
-    }finally{
+      toast.error(apiError(error, "Some Error Occured"));
+    } finally {
       setaskailoading(false);
     }
+  };
 
-  }
-
-  const handleGetHint=async ()=>{
-
-    if(gothint){
-      return toast.info("Hint Already Used")
+  const handleGetHint = async () => {
+    if (gothint) {
+      return toast.info("Hint Already Used");
     }
 
     try {
       setgethintloadinh(true);
-      const response=await axios.post(`${import.meta.env.VITE_BACKEND_PORT}/ai/gethint`,{
-        pid:problemId
-      })
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_PORT}/ai/gethint`, {
+        pid: problemId
+      });
 
-      if(!response.data.success){
+      if (!response.data.success) {
         toast.error(response.data.msg);
-      }
-      else{
-        setcode(code + `\n/*\n${response.data.res}\n*/`)
+      } else {
+        setcode(code + asComment(response.data.res, language));
         setgothint(true);
+        toast.info("Hint added at the end of your code");
       }
-
     } catch (error) {
-      const errMsg = error.response?.data?.msg || error.response?.data?.err || error.response?.data?.error || error.message || "Error getting Hints";
-      toast.error(errMsg);
-    } finally{
+      toast.error(apiError(error, "Error getting Hints"));
+    } finally {
       setgethintloadinh(false);
     }
+  };
 
-  }
+  const testsFailed = runteastcaseresponse && runteastcaseresponse.success === false;
+  const consoleValue = active === 'input' ? codeinput : codeoutput;
 
   return (
-    <div className="space-y-6 bg-black/40 backdrop-blur-sm border-2 border-cyan-400/50 rounded-lg p-6">
-      {/* Code Editor */}
-      <div className="space-y-4">
-        <div className="text-xl font-bold text-cyan-400 font-mono uppercase tracking-wider">
-          Solve It!
-        </div>
-
-        <div className="flex gap-4 text-sm font-mono text-purple-300">
+    <div className="space-y-4">
+      {/* Editor */}
+      <section className="card overflow-hidden" aria-label="Code editor">
+        <div className="flex items-center justify-between gap-3 border-b border-hairline px-3 py-2.5">
+          <label className="sr-only" htmlFor="solve-language">Language</label>
           <select
-            className="bg-black/50 border-2 border-purple-500 text-cyan-300 rounded-md px-3 py-1"
+            id="solve-language"
+            className="field field-sm w-36"
             value={language}
             onChange={(e) => handleLanguageChange(e.target.value)}
           >
-            <option className="bg-black" value="cpp">C++</option>
-            <option className="bg-black" value="python">Python</option>
-            <option className="bg-black" value="javascript">JavaScript</option>
+            {LANGUAGES.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
           </select>
-
-          <select
-            className="bg-black/50 border-2 border-purple-500 text-cyan-300 rounded-md px-3 py-1"
-            value={theme}
-            onChange={(e) => settheme(e.target.value)}
-          >
-            <option className="bg-black" value="vs-dark">Dark</option>
-            <option className="bg-black" value="light">Light</option>
-            <option className="bg-black" value="vs">VS</option>
-            <option className="bg-black" value="hc-black">High Contrast</option>
-          </select>
-
-          <select
-            className="bg-black/50 border-2 border-purple-500 text-cyan-300 rounded-md px-3 py-1"
-            value={fontsize}
-            onChange={(e) => setfontsize(Number(e.target.value))}
-          >
-            {[12, 14, 16, 18, 20].map(size => (
-              <option className="bg-black" key={size} value={size}>{size}px</option>
-            ))}
-          </select>
+          <EditorSettings fontSize={fontsize} setFontSize={setfontsize} theme={theme} setTheme={settheme} />
         </div>
 
-        <div className="rounded-md overflow-hidden border-2 border-purple-500 shadow-lg">
+        <AnimatePresence initial={false}>
+          {aiUndo !== null && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={snappy}
+              className="overflow-hidden"
+            >
+              <div className="flex items-center gap-3 border-b border-hairline bg-ai/10 px-4 py-2.5 text-sm">
+                <Sparkles size={16} className="shrink-0 text-ai" />
+                <p className="flex-1 text-label">AI rewrote your code with a suggested fix.</p>
+                <button className="btn btn-secondary btn-sm" onClick={() => { setcode(aiUndo); setAiUndo(null); }}>
+                  <Undo2 size={14} /> Undo
+                </button>
+                <button className="btn btn-ghost btn-icon h-8 w-8" aria-label="Keep AI changes" onClick={() => setAiUndo(null)}>
+                  <X size={15} />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="h-[clamp(320px,52vh,600px)]">
           <Editor
-            height="400px"
+            height="100%"
             theme={theme}
-            language={language === 'python' || language === 'py' ? 'python' : language === 'javascript' || language === 'js' ? 'javascript' : 'cpp'}
+            language={toMonacoLanguage(language)}
             value={code}
-            onChange={(value) => {setcode(value || '');setruntestcaseresponse(null)}}
-            options={{
-              padding: { top: 12 },
-              fontSize: fontsize
+            beforeMount={defineEditorThemes}
+            onMount={(editor, monaco) => {
+              editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => runRef.current());
             }}
+            loading={<Skeleton className="m-4 h-[calc(100%-2rem)] rounded-xl" />}
+            onChange={(value) => { setcode(value || ''); setruntestcaseresponse(null); }}
+            options={editorOptions(fontsize)}
           />
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4">
-          <button
-            disabled={runloading}
-            className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-mono px-4 py-2 rounded-md border border-pink-400 shadow-md transition-all duration-300 hover:scale-105"
-            onClick={handleRun}
-          >
-            {runloading ? "Running..." : "Run"}
-          </button>
-
-          <button
-            disabled={runTestCaseloading}
-            className="bg-gradient-to-r from-red-500 to-orange-400 hover:from-red-400 hover:to-orange-500 text-white font-mono px-4 py-2 rounded-md border border-red-400 shadow-md transition-all duration-300 hover:scale-105"
-            onClick={handleRunTest}
-          >
-            {!runTestCaseloading ? "Run Tests" : "Running Testcases ..."}
-          </button>
-          <button
-          disabled={submitloading}
-            className="bg-gradient-to-r from-green-500 to-cyan-600 hover:from-green-400 hover:to-cyan-500 text-white font-mono px-4 py-2 rounded-md border border-green-400 shadow-md transition-all duration-300 hover:scale-105"
-            onClick={handleSubmit}
-          >
-            {submitloading?"Submitting..." : "Submit"}
-          </button>
-          {/* Get Hints From AI */}
-          <button
-          disabled={gethintloading}
-            className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-white font-mono px-4 py-2 rounded-md border border-yellow-300 shadow-md transition-all duration-300 hover:scale-105"
-            onClick={handleGetHint}
-          >
-            {gethintloading?"Getting..." : "Get Hint"}
-          </button>
-          {/*  ASK AI active when testcase fails */}
-          {showaskai && 
-            <button
-            disabled={askailoading}
-            className="bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white font-mono px-4 py-2 rounded-md border border-indigo-400 shadow-md transition-all duration-300 hover:scale-105"
-            onClick={handleAskAi}
-          >
-            {askailoading?"Wait ...":"Ask Ai"}
-          </button>
-          }
-        </div>
-      </div>
-
-      {/* Console: Input / Output */}
-      <div className="rounded-lg overflow-hidden border-2 border-purple-500/70 bg-black/70 shadow-[0_0_18px_rgba(168,85,247,0.35)]">
-        {/* Title bar with tabs */}
-        <div className="flex items-center justify-between gap-2 bg-gradient-to-r from-purple-900/60 to-cyan-900/40 border-b border-purple-500/40 px-3 py-2">
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-red-500/80" />
-              <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/80" />
-              <span className="h-2.5 w-2.5 rounded-full bg-green-500/80" />
-            </div>
-            <div className="flex gap-1 font-mono text-base">
-              {[
-                { key: 'input', label: 'Input', Icon: Keyboard, value: codeinput },
-                { key: 'output', label: 'Output', Icon: Terminal, value: codeoutput },
-              ].map(({ key, label, Icon, value }) => (
-                <button
-                  key={key}
-                  onClick={() => { settodisplay(value); setactive(key); }}
-                  className={`flex items-center gap-1.5 rounded px-3 py-1 border transition-all ${
-                    active === key
-                      ? 'border-cyan-400 bg-cyan-400/15 text-cyan-200 shadow-[0_0_8px_rgba(34,211,238,0.5)]'
-                      : 'border-transparent text-gray-400 hover:text-cyan-300 hover:bg-white/5'
-                  }`}
+        {/* Actions: assistive tools on the left, the run → test → submit flow on the right */}
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-hairline px-3 py-2.5">
+          <div className="flex items-center gap-1">
+            <button disabled={gethintloading || gothint} onClick={handleGetHint} className="btn btn-ghost btn-sm" title={gothint ? 'Hint already used' : 'Get a hint'}>
+              {gethintloading ? <Spinner className="h-3.5 w-3.5" /> : <Lightbulb size={15} className="text-hint" />}
+              {gothint ? 'Hint used' : 'Hint'}
+            </button>
+            <AnimatePresence initial={false}>
+              {testsFailed && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={snappy}
+                  disabled={askailoading}
+                  onClick={handleAskAi}
+                  className="btn btn-ghost btn-sm"
                 >
-                  <Icon size={14} />
-                  {label}
-                </button>
-              ))}
-            </div>
+                  {askailoading ? <Spinner className="h-3.5 w-3.5" /> : <Sparkles size={15} className="text-ai" />}
+                  {askailoading ? 'Thinking…' : 'Fix with AI'}
+                </motion.button>
+              )}
+            </AnimatePresence>
           </div>
 
-          <div className="flex items-center gap-1 text-gray-400">
+          <div className="flex items-center gap-2">
+            <button disabled={runloading} onClick={handleRun} className="btn btn-secondary btn-sm" title="Run with custom input">
+              {runloading ? <Spinner className="h-3.5 w-3.5" /> : <Play size={14} fill="currentColor" />}
+              Run
+              <span className="hidden lg:inline"><ModKey /></span>
+            </button>
+            <button disabled={runTestCaseloading} onClick={handleRunTest} className="btn btn-secondary btn-sm">
+              {runTestCaseloading ? <Spinner className="h-3.5 w-3.5" /> : <FlaskConical size={15} />}
+              {runTestCaseloading ? 'Testing…' : 'Run tests'}
+            </button>
+            <button disabled={submitloading} onClick={handleSubmit} className="btn btn-primary btn-sm">
+              {submitloading ? <Spinner className="h-3.5 w-3.5" /> : <Send size={14} />}
+              {submitloading ? 'Submitting…' : 'Submit'}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Test results slot in between editor and console without covering anything */}
+      <AnimatePresence initial={false}>
+        {showresultmodule && runteastcaseresponse && (
+          <RunTestCasesResultModule key="results" response={runteastcaseresponse} setshowresultmodule={setshowresultmodule} />
+        )}
+      </AnimatePresence>
+
+      {/* Console: Input / Output */}
+      <section className="card overflow-hidden" aria-label="Console">
+        <div className="flex items-center justify-between gap-2 border-b border-hairline px-3 py-2">
+          <Segmented
+            label="Console"
+            size="sm"
+            value={active}
+            onChange={setactive}
+            options={[
+              { value: 'input', label: 'Input', Icon: Keyboard },
+              { value: 'output', label: 'Output', Icon: Terminal },
+            ]}
+          />
+          <div className="flex items-center gap-0.5">
             <button
-              title="Copy"
-              className="rounded p-1.5 hover:bg-white/10 hover:text-cyan-300"
+              aria-label={`Copy ${active}`}
+              className="btn btn-ghost btn-icon h-8 w-8"
+              disabled={!consoleValue}
               onClick={() => {
-                navigator.clipboard?.writeText(active === 'input' ? codeinput : codeoutput)
+                navigator.clipboard?.writeText(consoleValue)
                   .then(() => toast.success('Copied to clipboard', { duration: 1500 }))
                   .catch(() => toast.error('Could not copy'));
               }}
@@ -380,9 +329,10 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
             </button>
             {active === 'input' && (
               <button
-                title="Clear input"
-                className="rounded p-1.5 hover:bg-white/10 hover:text-red-400"
-                onClick={() => { setcodeinput(''); settodisplay(''); }}
+                aria-label="Clear input"
+                className="btn btn-ghost btn-icon h-8 w-8"
+                disabled={!codeinput}
+                onClick={() => setcodeinput('')}
               >
                 <Trash2 size={15} />
               </button>
@@ -390,29 +340,26 @@ const ProblemSolveCodeArea = ( { problemId } ) => {
           </div>
         </div>
 
-        {/* Body */}
-        <div className="relative">
+        {active === 'input' ? (
           <textarea
+            aria-label="Standard input"
             spellCheck={false}
-            className={`block w-full h-40 resize-y bg-transparent px-4 py-3 font-mono text-lg leading-relaxed placeholder:text-gray-500 focus:outline-none focus:bg-cyan-400/5 ${
-              active === 'output' ? 'text-green-300 cursor-default' : 'text-cyan-200'
-            }`}
-            value={active === 'input' ? codeinput : codeoutput}
-            readOnly={active === 'output'}
-            onChange={handleOnChange}
-            placeholder="Enter custom input (stdin) ..."
+            className="block h-40 w-full resize-y bg-transparent px-4 py-3 font-mono text-sm leading-relaxed text-label placeholder:text-label-3 focus:outline-none"
+            value={codeinput}
+            onChange={(e) => setcodeinput(e.target.value)}
+            placeholder="Custom input (stdin) for Run"
           />
-          <span className="pointer-events-none absolute bottom-1 right-3 text-[10px] font-mono uppercase tracking-widest text-purple-300/50">
-            {active === 'input' ? 'stdin' : 'stdout · read-only'}
-          </span>
-        </div>
-      </div>
-
-        <div>
-            {showresultmodule  && <RunTestCasesResultModule response={runteastcaseresponse} setshowresultmodule={setshowresultmodule} />}
-        </div>
-        
-
+        ) : (
+          <pre
+            aria-live="polite"
+            className={`h-40 overflow-auto whitespace-pre-wrap break-words px-4 py-3 font-mono text-sm leading-relaxed transition-opacity ${
+              runloading ? 'opacity-50' : ''
+            } ${outputFailed ? 'text-danger' : codeoutput ? 'text-label' : 'text-label-3'}`}
+          >
+            {runloading ? 'Running…' : codeoutput || 'Output will appear here after you run your code.'}
+          </pre>
+        )}
+      </section>
     </div>
   );
 };

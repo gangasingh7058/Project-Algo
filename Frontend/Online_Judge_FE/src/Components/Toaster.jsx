@@ -2,12 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle2, XCircle, AlertTriangle, Info, X } from 'lucide-react';
 import { subscribe, dismiss } from '../Helping Functions/toast';
+import { spring } from '../Helping Functions/motion';
 
 const STYLES = {
-  success: { color: '#22c55e', Icon: CheckCircle2 },
-  error: { color: '#ef4444', Icon: XCircle },
-  warning: { color: '#f59e0b', Icon: AlertTriangle },
-  info: { color: '#22d3ee', Icon: Info },
+  success: { color: '#30d158', Icon: CheckCircle2 },
+  error: { color: '#ff453a', Icon: XCircle },
+  warning: { color: '#ff9f0a', Icon: AlertTriangle },
+  info: { color: '#0a84ff', Icon: Info },
 };
 
 const ToastItem = ({ id, type, message, duration }) => {
@@ -16,7 +17,7 @@ const ToastItem = ({ id, type, message, duration }) => {
   const remaining = useRef(duration);
   const startedAt = useRef(0);
 
-  // Auto-dismiss timer; pauses while hovered and resumes with the time that was left
+  // Auto-dismiss timer; pauses while hovered or dragged and resumes with the time that was left
   useEffect(() => {
     if (paused) return;
     startedAt.current = Date.now();
@@ -30,32 +31,38 @@ const ToastItem = ({ id, type, message, duration }) => {
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, x: 60, scale: 0.95 }}
+      initial={{ opacity: 0, x: 48, scale: 0.96 }}
       animate={{ opacity: 1, x: 0, scale: 1 }}
-      exit={{ opacity: 0, x: 60, scale: 0.95 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+      exit={{ opacity: 0, x: 48, scale: 0.96 }}
+      transition={spring}
+      // Swipe right to dismiss: tracks 1:1, rubber-bands to the left, decides on velocity
+      drag="x"
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={{ left: 0.08, right: 0.9 }}
+      onDragStart={() => setPaused(true)}
+      onDragEnd={(_, info) => {
+        if (info.offset.x > 80 || info.velocity.x > 500) dismiss(id);
+        else setPaused(false);
+      }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
-      onClick={() => dismiss(id)}
       role={type === 'error' ? 'alert' : 'status'}
-      className="pointer-events-auto relative w-80 max-w-[calc(100vw-2rem)] cursor-pointer overflow-hidden rounded-lg border border-white/10 bg-zinc-900/95 text-zinc-100 shadow-xl backdrop-blur"
-      style={{ boxShadow: `0 8px 30px rgba(0,0,0,0.5), 0 0 12px ${color}33` }}
+      className="glass pointer-events-auto relative w-[22rem] max-w-[calc(100vw-2rem)] cursor-grab touch-pan-y overflow-hidden rounded-2xl border border-hairline text-label shadow-2xl shadow-black/60 active:cursor-grabbing"
     >
-      <div className="flex items-start gap-3 p-3 pr-8">
-        <Icon size={20} style={{ color }} className="mt-0.5 shrink-0" />
-        <p className="text-sm leading-snug break-words">{message}</p>
+      <div className="flex items-start gap-3 py-3.5 pl-4 pr-11">
+        <Icon size={20} style={{ color }} className="mt-px shrink-0" />
+        <p className="text-[0.9375rem] leading-snug break-words">{message}</p>
       </div>
       <button
         aria-label="Dismiss"
-        className="absolute right-2 top-2 text-zinc-400 hover:text-white"
-        onClick={(e) => { e.stopPropagation(); dismiss(id); }}
+        className="btn btn-ghost btn-icon absolute right-1.5 top-1.5 h-8 w-8"
+        onClick={() => dismiss(id)}
       >
-        <X size={14} />
+        <X size={15} />
       </button>
-      {/* countdown bar */}
-      <div className="h-0.5 w-full bg-white/5">
+      <div className="h-0.5 w-full">
         <div
-          className="toast-progress h-full"
+          className="toast-progress h-full opacity-70"
           style={{
             background: color,
             animationDuration: `${duration}ms`,

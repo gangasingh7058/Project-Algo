@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Editor from '@monaco-editor/react';
 import axios from 'axios';
-import RetroNavbar from '../Components/Navbar';
+import { Play } from 'lucide-react';
 import toast from '../Helping Functions/toast';
+import { EditorSettings, ModKey, Page, PageHeader, Skeleton, Spinner } from '../Components/ui';
+import { LANGUAGES, defineEditorThemes, editorOptions, toMonacoLanguage } from '../Helping Functions/editor';
 
 const COMPILER_TEMPLATES = {
   cpp: `#include <iostream>\nusing namespace std;\n\nint main() {\n    int a, b;\n    if (cin >> a >> b) {\n        cout << a + b;\n    }\n    return 0;\n}`,
@@ -11,15 +13,15 @@ const COMPILER_TEMPLATES = {
 };
 
 const CompilerPage = () => {
-
-
   const [language, setLanguage] = useState('cpp');
   const [code, setCode] = useState(COMPILER_TEMPLATES.cpp);
   const [inputs, setInputs] = useState('');
   const [output, setOutput] = useState('');
+  const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [fontSize, setFontSize] = useState(18);
-  const [theme, setTheme] = useState('vs-dark');
+  const [fontSize, setFontSize] = useState(15);
+  const [theme, setTheme] = useState('midnight');
+  const runRef = useRef(null);
 
   const handleLanguageChange = (newLang) => {
     setLanguage(newLang);
@@ -30,8 +32,9 @@ const CompilerPage = () => {
   };
 
   const handleRun = async () => {
-    const requiresInput = 
-      (code.includes('cin') || code.includes('input()') || code.includes('readFileSync') || code.includes('Scanner')) && 
+    if (loading) return;
+    const requiresInput =
+      (code.includes('cin') || code.includes('input()') || code.includes('readFileSync') || code.includes('Scanner')) &&
       inputs.trim() === '';
 
     if (requiresInput) {
@@ -39,15 +42,8 @@ const CompilerPage = () => {
       return;
     }
 
-    let checkifworking = null
     setLoading(true);
     try {
-      checkifworking=await axios.get(`${import.meta.env.VITE_COMPILER_PORT}/health`);
-      if(!checkifworking.data){
-        setOutput("Compiler Not responding");
-        return ;
-      }
-
       const res = await axios.post(`${import.meta.env.VITE_COMPILER_PORT}/run`, {
         language: language,
         code: code,
@@ -57,130 +53,100 @@ const CompilerPage = () => {
 
       if (res.data.success) {
         setOutput(res.data.verdict);
+        setFailed(false);
       } else {
         setOutput(res.data.error || res.data.err || "Error");
+        setFailed(true);
       }
     } catch (err) {
-      console.log(checkifworking);
-      
-      if(checkifworking==null){
-        setOutput("Compiler Not Responding")
-      }
-      else setOutput("Server error");
+      // No response at all means the compiler service is down or still waking up
+      setOutput(err.response ? "Server error" : "Compiler not responding. It may be waking up — try again in a few seconds.");
+      setFailed(true);
     } finally {
       setLoading(false);
     }
   };
+  runRef.current = handleRun;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 pb-10 text-white relative overflow-hidden">
-           
-          <RetroNavbar />
-          
+    <Page className="pb-16">
+      <PageHeader eyebrow="Playground" title="Compiler" subtitle="Write, run and experiment in C++, Python or JavaScript." />
 
-      {/* Main Content */}
-      <div className="relative z-10 px-6 font-mono">
-        
-        {/* Header Controls */}
-        <div className="flex flex-wrap gap-4 items-center justify-between mb-6">
-          <h1 className="text-6xl font-bold text-cyan-400 md:pl-30 drop-shadow-[0_0_10px_#22d3ee]">
-            Code Compiler
-          </h1>
-
-          <div className="flex flex-col md:flex-row gap-y-3 md:gap-y-0 md:gap-x-4">
-            <div>
-              <label className="mr-2 font-semibold text-white">Language:</label>
-              <select
-                className="bg-black/50 border border-cyan-400 text-white px-2 py-1 rounded"
-                value={language}
-                onChange={(e) => handleLanguageChange(e.target.value)}
-              >
-                <option className="bg-black" value="cpp">C++</option>
-                <option className="bg-black" value="python">Python</option>
-                <option className="bg-black" value="javascript">JavaScript</option>
-              </select>
-            </div>
-            <div>
-              <label className="mr-2 font-semibold text-white">Font Size:</label>
-              <select
-                className="bg-black/50 border border-cyan-400 text-white px-2 py-1 rounded"
-                value={fontSize}
-                onChange={(e) => setFontSize(Number(e.target.value))}
-              >
-                {[12, 14, 16, 18, 20].map(size => (
-                  <option className="bg-black" key={size} value={size}>
-                    {size}px
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="mr-2 font-semibold text-white">Theme:</label>
-              <select
-                className="bg-black/50 border border-cyan-400 text-white px-2 py-1 rounded"
-                value={theme}
-                onChange={(e) => setTheme(e.target.value)}
-              >
-                <option className="bg-black" value="vs-dark">Dark</option>
-                <option className="bg-black" value="light">Light</option>
-                <option className="bg-black" value="vs">VS</option>
-                <option className="bg-black" value="hc-black">High Contrast</option>
-              </select>
-            </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+        {/* Editor */}
+        <section className="card overflow-hidden lg:col-span-3" aria-label="Code editor">
+          <div className="flex items-center justify-between gap-3 border-b border-hairline px-3 py-2.5">
+            <label className="sr-only" htmlFor="compiler-language">Language</label>
+            <select
+              id="compiler-language"
+              className="field field-sm w-36"
+              value={language}
+              onChange={(e) => handleLanguageChange(e.target.value)}
+            >
+              {LANGUAGES.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
+            </select>
+            <EditorSettings fontSize={fontSize} setFontSize={setFontSize} theme={theme} setTheme={setTheme} />
           </div>
 
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Editor */}
-          <div className="rounded-xl overflow-hidden shadow-lg border-2 border-cyan-400/30 bg-black/30 backdrop-blur-md">
+          <div className="h-[clamp(360px,60vh,620px)]">
             <Editor
-              height="500px"
-              language={language === 'python' || language === 'py' ? 'python' : language === 'javascript' || language === 'js' ? 'javascript' : 'cpp'}
+              height="100%"
+              language={toMonacoLanguage(language)}
               value={code}
               theme={theme}
-              onChange={(value) => setCode(value || '')}
-              options={{
-                fontSize: fontSize,
-                minimap: { enabled: false },
-                padding: { top: 12 },
+              beforeMount={defineEditorThemes}
+              onMount={(editor, monaco) => {
+                editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => runRef.current());
               }}
+              loading={<Skeleton className="m-4 h-[calc(100%-2rem)] rounded-xl" />}
+              onChange={(value) => setCode(value || '')}
+              options={editorOptions(fontSize)}
             />
-            <div className="p-4 flex justify-end border-t border-cyan-400/20">
-              <button
-                onClick={handleRun}
-                className="bg-cyan-500 hover:bg-cyan-400 text-black px-6 py-2 rounded-lg font-bold uppercase border border-cyan-300 transition"
-              >
-                {loading ? 'Running...' : 'Run Code'}
-              </button>
-            </div>
           </div>
 
-          {/* I/O */}
-          <div className="flex flex-col gap-6">
-            <div className="bg-black/30 rounded-xl border border-cyan-400/30 p-4">
-              <h2 className="text-xl font-bold pb-2 text-cyan-300">Input</h2>
-              <textarea
-                rows={5}
-                value={inputs}
-                onChange={(e) => setInputs(e.target.value)}
-                placeholder="Enter input for your program"
-                className="w-full rounded-lg p-3 placeholder:text-cyan-400 text-white border border-cyan-400 bg-transparent resize-none focus:outline-none"
-              />
-            </div>
-            <div className="bg-black/30 rounded-xl border border-cyan-400/30 p-4">
-              <h2 className="text-xl font-bold pb-2 text-cyan-300">Output</h2>
-              <textarea
-                readOnly
-                value={output}
-                placeholder="Output will be displayed here..."
-                className="w-full rounded-lg p-3 text-white placeholder:text-cyan-400 border border-cyan-400 bg-transparent min-h-[150px] resize-none focus:outline-none"
-              />
-            </div>
+          <div className="flex items-center justify-end gap-3 border-t border-hairline px-3 py-2.5">
+            <span className="hidden text-xs text-label-3 sm:inline">Run with <ModKey /></span>
+            <button onClick={handleRun} disabled={loading} className="btn btn-primary">
+              {loading ? <><Spinner /> Running…</> : <><Play size={15} fill="currentColor" /> Run</>}
+            </button>
           </div>
+        </section>
+
+        {/* I/O */}
+        <div className="flex flex-col gap-6 lg:col-span-2">
+          <section className="card flex flex-col p-4">
+            <label htmlFor="compiler-input" className="title px-1 pb-3 text-[0.9375rem]">Input</label>
+            <textarea
+              id="compiler-input"
+              rows={6}
+              spellCheck={false}
+              value={inputs}
+              onChange={(e) => setInputs(e.target.value)}
+              placeholder="Standard input for your program"
+              className="field resize-y font-mono text-sm"
+            />
+          </section>
+
+          <section className="card flex flex-1 flex-col p-4" aria-live="polite">
+            <div className="flex items-center justify-between px-1 pb-3">
+              <h2 className="title text-[0.9375rem]">Output</h2>
+              {output && !loading && (
+                <span className={`text-xs font-medium ${failed ? 'text-danger' : 'text-success'}`}>
+                  {failed ? 'Error' : 'Finished'}
+                </span>
+              )}
+            </div>
+            <pre
+              className={`min-h-[10rem] flex-1 overflow-auto whitespace-pre-wrap break-words rounded-xl bg-fill p-3.5 font-mono text-sm leading-relaxed ${
+                failed ? 'text-danger' : output ? 'text-label' : 'text-label-3'
+              } ${loading ? 'opacity-50' : ''} transition-opacity`}
+            >
+              {output || 'Output will appear here.'}
+            </pre>
+          </section>
         </div>
       </div>
-    </div>
+    </Page>
   );
 };
 
